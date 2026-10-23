@@ -1,0 +1,39 @@
+# 场景插画的时段标签（术语见 github-pages-design-preparation/CONTEXT.md 的「时段标签」）。
+# 每行：背景池里的 id、一个 Tab、白天／黄昏／夜晚。没列出的图算不分时段。
+# 同人图的 7 个标签 2026-10-17 随 16 张同人图一起由用户验收；官方 38 张的 2026-10-21 由用户按建议确认
+# （白天 17 张、黄昏 4 张、夜晚 4 张，另外 13 张不分时段，没有列出）。
+# 时段功能还没做进网页，做的时候再接入素材清单。
+# 官方
+pixiv:002316_128404489_p00_raemz	黄昏
+pixiv:005781_113038723_p00_raemz	白天
+pixiv:005882_109568369_p00_raemz	白天
+official-625e58184a14ab56	夜晚
+x:2108832953778442330:HUQTS2CaYAEVY1q	白天
+x:2105851523964313828:HTl8zA3awAAdtiX	白天
+publisher:3457438b0ea1c9a8fcb0a8be	夜晚
+publisher:20adf63a06c6ca1e1f794fa9	白天
+publisher:2ebd301e28279df8f77f0cbb	黄昏
+publisher:616c3e6b8857aed78e50a51b	白天
+novel:vol13-04	黄昏
+novel:ss2-13	黄昏
+novel:ss1-03	白天
+x:1719509831705612688:F9zsy2oaIAAPnaW	白天
+orig-x:2068152039960711495:HLONUOdbsAABgYV	白天
+orig-x:1930805648448692584:GsuZAWaaoAAfB1h	白天
+orig-x:1986773126475108505:G5I4vPxbgAASnvC	白天
+orig-x:1849255284981805235:GanfpVaaAAA_2oL	夜晚
+x:002911_x2085297326265147485_0_bunko_dengeki	夜晚
+x:001513_x1325634214281183232_0_Dengeki_Daioh	白天
+user-medicos-2025-86a	白天
+user-medicos-2025-86b	白天
+comic-color:vol1:title-page:q2	白天
+comic-color:vol4:title-page:q3	白天
+comic-color:vol2:title-page:q4	白天
+# 同人
+pixiv:000278_143193018_p00_AIcazZ	白天
+pixiv:000339_143718218_p00_AIcazZ	白天
+pixiv:000538_145301791_p05_海盗猫	白天
+x:2080680012077027616:HOAPcTHagAAuuz5	白天
+x:2107924840330269087:HUDad7vXkAEWLUu	白天
+x:030573_x1918983947029258645_0_pomujoynet1	黄昏
+xhs:6a8c6ae2000000002202d17a:02	夜晚

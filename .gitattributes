@@ -1,0 +1,5 @@
+# Preserve the exact bytes and recorded hashes of imported reference materials.
+github-pages-design-preparation/collected/** -text
+
+# cmd.exe requires Windows line endings for the UTF-8 launchers.
+/tools/launch/*.bat text eol=crlf

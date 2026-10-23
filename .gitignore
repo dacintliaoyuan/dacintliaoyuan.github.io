@@ -1,0 +1,32 @@
+# 最终 site/assets/ 随网站入库；仅忽略生成过程的备份、暂存和锁文件
+site/assets-previous-*/
+site/.assets-staging-*/
+site/.assets-build.lock
+
+# 本机资料、图库、交接、测试与诊断日志，不入库
+/.local/
+/docs/
+/AGENTS.md
+/output/
+/tmp/
+/tests/
+/handoffs/
+/github-pages-design-preparation/
+
+# Python 缓存
+__pycache__/
+.pytest_cache/
+
+# 执行软件的本机设置与扫描状态
+/.claude/
+/.mimosa/
+/.zcode/
+
+# 本机 Agent skills、Claude 挂载与其运行时（可从已锁定来源重建）
+/.agents/
+/.claude/skills/
+/.ai-design-qa/
+
+# Skills 的会话态与实时编辑状态
+/.playwright-cli/
+/.impeccable/live/

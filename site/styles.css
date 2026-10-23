@@ -1,0 +1,875 @@
+/* Opening screen of dacint_liaoyuan's homepage: graph paper with a camera window on it, which opens
+   out to the whole screen when the camera lands. main.js sizes the shot's window (--wx, --wy, --ww,
+   --wh), sets the viewfinder margin (--m) and moves every animated layer frame by frame; these rules
+   give the layers their stacking and looks, and the final screen its idle motion.
+   Lines come in three weights: hairlines (0.75px), rules (1-1.5px) and bars (3-5px). The paper
+   margins carry ornaments only, never text or pictures. */
+/* The paper and what is drawn on it follow the time of day (time.js sets --dark and --light): the cool
+   white graph paper by day, a deep blue night paper at night. Through the hour round sunset the paper
+   darkens (--dark, 0 to 1) and halfway through it the lines and the lettering go over from ink to light
+   (--light, 0 or 1); at sunrise the other way round. The blue bird's blue stays as it is. */
+@property --dark { syntax: '<number>'; inherits: true; initial-value: 0; }
+@property --light { syntax: '<number>'; inherits: true; initial-value: 0; }
+:root {
+  --paper: color-mix(in srgb, #f4f6f8, #0d1628 calc(100% * var(--dark)));
+  --grid: color-mix(in srgb, rgba(60, 68, 88, 0.055), rgba(150, 178, 228, 0.075) calc(100% * var(--light)));
+  --ink: color-mix(in srgb, #3c4458, #d3dcea calc(100% * var(--light)));
+  --ink-soft: color-mix(in srgb, #66748a, #8c9ab2 calc(100% * var(--light)));
+  /* construction lines on the paper */
+  --hair: color-mix(in srgb, rgba(60, 68, 88, 0.42), rgba(196, 210, 234, 0.34) calc(100% * var(--light)));
+  --accent: #1c8ad7;                /* the blue bird's blue */
+  /* ornament outlines, after the blue-sky film */
+  --pale: color-mix(in srgb, rgba(28, 138, 215, 0.6), rgba(98, 176, 238, 0.62) calc(100% * var(--light)));
+  --deep: color-mix(in srgb, #164f86, #a8cdf0 calc(100% * var(--light)));   /* equations over the sky */
+  --cell: 28px;                     /* the graph paper's squares, and the fill's (main.js reads it) */
+}
+/* (eased over once the time is worked out again on an open page, or chosen in the settings; the first
+   paint has it straight away) */
+:root.time-ease { transition: --dark 1.2s ease-in-out, --light 1.2s ease-in-out; }
+
+/* The two typefaces come from this site (fonts/, SIL OFL 1.1, licences beside them), so the first
+   paint waits on no other server: Archivo Black for HELLO and the name, Inter (one variable file,
+   weights 500 to 600) for the rest. Latin only, like the page's own lettering. */
+@font-face {
+  font-family: "Archivo Black"; font-style: normal; font-weight: 400; font-display: swap;
+  src: url("fonts/archivo-black-latin.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: Inter; font-style: normal; font-weight: 500 600; font-display: swap;
+  src: url("fonts/inter-latin.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; overflow: hidden; background: var(--paper); }
+/* a visit opening straight on the opening screen or a section, until it can be shown whole (index.html):
+   nothing of it, over the fill's colour as it was last (--arrive) rather than the bare paper */
+html.arriving .stage, html.arriving .stage *, html.arriving .pointer { visibility: hidden !important; }
+html.arriving, html.arriving body { background: var(--arrive, var(--paper)); }
+body { color: var(--ink); font-family: Inter, system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+
+.stage { --m: 24px; position: relative; width: 100vw; height: 100vh; height: 100svh; overflow: hidden; background: var(--paper); }
+.stage::before {
+  content: ""; position: absolute; inset: 0; pointer-events: none; opacity: var(--grid-in, 1);
+  background-image: linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: var(--cell) var(--cell);
+}
+
+/* Pointers (CONTEXT: 鼠标指针). For a mouse, pointer.js draws the pointer: a viewfinder corner with
+   Shimamura and Adachi beside it. Each rule here that sets a cursor sets --pointer with it, what is
+   drawn there (rest, click, press, help, text, resize, grabbing; a ruler's handle, grab, is found by
+   where it is), and the system's pointer is hidden while it is drawn (html.pointer-drawn). The cursors
+   are for before it has drawn and where it does not (a pen): the corner alone, white on a faint dark
+   edge so that it shows on the paper and on the pictures, the point at its corner; blue over what can
+   be clicked, drawn in while pressed; a question tile beside it over what says something when pointed
+   at. Written text keeps the I-beam, a ruler's handle the hand and the divider the resize arrows. Where
+   a browser cannot draw them sharp on a fine screen (image-set), and with forced colours, they are the
+   system's. */
+:root { --cursor: default; --cursor-click: pointer; --cursor-press: pointer; --cursor-help: help; }
+@supports (cursor: image-set(url("data:,") 1x) 0 0, auto) {
+  :root {
+    --cursor: image-set(url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'%3E%3Cpath d='M1 1h19v4H5V20H1z' fill='%23fff' stroke='%230b1526' stroke-opacity='.72' paint-order='stroke' stroke-width='2'/%3E%3C/svg%3E") 1x, url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64' viewBox='0 0 32 32'%3E%3Cpath d='M1 1h19v3.5H4.5V20H1z' fill='%23fff' stroke='%230b1526' stroke-opacity='.72' paint-order='stroke' stroke-width='1'/%3E%3C/svg%3E") 2x) 1 1, default;
+    --cursor-click: image-set(url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'%3E%3Cpath d='M1 1h19v4H5V20H1z' fill='%231c8ad7' stroke='%230b1526' stroke-opacity='.72' paint-order='stroke' stroke-width='2'/%3E%3C/svg%3E") 1x, url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64' viewBox='0 0 32 32'%3E%3Cpath d='M1 1h19v3.5H4.5V20H1z' fill='%231c8ad7' stroke='%230b1526' stroke-opacity='.72' paint-order='stroke' stroke-width='1'/%3E%3C/svg%3E") 2x) 1 1, pointer;
+    --cursor-press: image-set(url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'%3E%3Cpath d='M3 3h14v4H7V17H3z' fill='%231c8ad7' stroke='%230b1526' stroke-opacity='.72' paint-order='stroke' stroke-width='2'/%3E%3C/svg%3E") 1x, url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64' viewBox='0 0 32 32'%3E%3Cpath d='M3 3h14v3.5H6.5V17H3z' fill='%231c8ad7' stroke='%230b1526' stroke-opacity='.72' paint-order='stroke' stroke-width='1'/%3E%3C/svg%3E") 2x) 1 1, pointer;
+    --cursor-help: image-set(url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='32' viewBox='0 0 40 32'%3E%3Cpath d='M1 8h19v4H5V27H1z' fill='%23fff' stroke='%230b1526' stroke-opacity='.72' paint-order='stroke' stroke-width='2'/%3E%3Crect x='24' y='3' width='12' height='12' rx='3' fill='%231c8ad7' stroke='%230b1526' stroke-opacity='.72' paint-order='stroke' stroke-width='2'/%3E%3Cpath d='M28.1 6.9a1.9 1.9 0 1 1 2.9 1.6c-.6.4-1 .8-1 1.5v.4' fill='none' stroke='%23fff' stroke-width='1.7' stroke-linecap='round'/%3E%3Ccircle cx='30' cy='12.6' r='1' fill='%23fff'/%3E%3C/svg%3E") 1x, url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='64' viewBox='0 0 40 32'%3E%3Cpath d='M1 8h19v3.5H4.5V27H1z' fill='%23fff' stroke='%230b1526' stroke-opacity='.72' paint-order='stroke' stroke-width='1'/%3E%3Crect x='24' y='3' width='12' height='12' rx='3' fill='%231c8ad7' stroke='%230b1526' stroke-opacity='.72' paint-order='stroke' stroke-width='1'/%3E%3Cpath d='M28.1 6.9a1.9 1.9 0 1 1 2.9 1.6c-.6.4-1 .8-1 1.5v.4' fill='none' stroke='%23fff' stroke-width='1.7' stroke-linecap='round'/%3E%3Ccircle cx='30' cy='12.6' r='1' fill='%23fff'/%3E%3C/svg%3E") 2x) 1 8, help;
+  }
+}
+@media (forced-colors: active) {
+  :root { --cursor: default; --cursor-click: pointer; --cursor-press: pointer; --cursor-help: help; }
+}
+.stage { cursor: var(--cursor); --pointer: rest; }
+/* the drawn pointer, a canvas over everything that a transform moves */
+.pointer { position: fixed; left: 0; top: 0; z-index: 2147483647; pointer-events: none; will-change: transform; }
+html.pointer-drawn, html.pointer-drawn * { cursor: none !important; }
+html.pointer-drawn .ruler::-webkit-slider-thumb { cursor: none !important; }
+html.pointer-drawn .ruler::-moz-range-thumb { cursor: none !important; }
+/* The page's own lettering (the name, the index, the titles, the settings) is part of the
+   design, not text to copy: a double-click or a drag does not select it. Text written in a section
+   (paragraphs) is: the I-beam over it, and a blue selection. */
+.identity, .index, .replay, .divider, .pane-title, .settings { -webkit-user-select: none; user-select: none; }
+.pane p { cursor: text; --pointer: text; }
+::selection { background: var(--accent); color: #fff; text-shadow: none; }
+
+/* The paper's lines and ornaments (screen space), under the window. */
+.guides { position: absolute; inset: 0; z-index: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+.guides line, .guides path, .guides circle, .guides rect { fill: none; stroke: var(--hair); stroke-width: 0.75; }
+.guides .bar { stroke: var(--ink); stroke-width: 3; }
+.guides .arc { stroke: var(--accent); stroke-width: 3.5; }
+.guides .outline { stroke: var(--ink); stroke-width: 1; stroke-dasharray: 1; }
+.guides .ring { stroke-dasharray: 1; }
+.guides .tick, .guides .rule { stroke: var(--ink-soft); }
+/* margin ornaments: outline squares on diagonals, cross marks, pixel squares, corner bars */
+.guides .frame { stroke: var(--pale); stroke-dasharray: 1; }
+.guides .cross { stroke: var(--ink); stroke-width: 1; }
+.guides .pixel { fill: var(--accent); stroke: none; }
+.guides .pixel.p1 { fill: #59bff7; }
+.guides .pixel.p2 { fill: #a9d4f2; }
+.guides .fade-bar { fill: url(#fadeBar); stroke: none; }
+.guides .ink-bar { fill: var(--ink); stroke: none; }
+.guides .blinds { fill: url(#blinds); stroke: none; }
+#blinds rect { fill: var(--ink); }
+.guides .corner-bars > * { transform-box: fill-box; }
+/* butterflies and blue-bird feathers drawn on the paper with HELLO; main.js gives each outline a
+   hairline width for its scale */
+.guides .wing { fill: var(--accent); stroke: var(--accent); stroke-dasharray: 1; fill-opacity: 0; }
+.guides .wing.hind, .guides .pale .wing.fore { fill: #59bff7; }
+.guides .pale .wing.hind { fill: var(--accent); }
+.guides .body { fill: #1871c2; stroke: none; }
+.guides .antenna, .guides .shaft { stroke: #1871c2; stroke-linecap: round; }
+.guides .vane { fill: url(#vane); stroke: var(--accent); stroke-dasharray: 1; fill-opacity: 0; }
+.guides .down { stroke: #59bff7; stroke-linecap: round; }
+/* the pinned specimen: the Lorenz attractor's orbit as its wings (0.5px, finer than a hairline so
+   its loops stay apart), the small square that traces it, crosses on its two fixed points, a
+   dimension line and a pin */
+.guides .orbit { stroke: var(--accent); stroke-dasharray: 1; opacity: 0.9; }
+.guides .tracer { fill: var(--accent); stroke: none; }
+.guides .cross.fine { stroke-width: 0.75; }
+.guides .dim { stroke: var(--ink); }
+.guides .pin { fill: var(--ink); stroke: none; }
+
+/* The window: the world inside is clipped to it. main.js places it (a framed shot, then the whole
+   screen); the custom properties are the framed shot. */
+.window { position: absolute; z-index: 1; left: var(--wx); top: var(--wy); width: var(--ww); height: var(--wh); overflow: hidden; }
+.world { position: absolute; inset: 0; }
+.sky { position: absolute; left: 0; top: 0; width: 100%; will-change: transform; }
+.stars { position: absolute; left: 0; top: 0; pointer-events: none; }
+.cloud { position: absolute; left: 0; top: 0; height: auto; pointer-events: none; user-select: none; will-change: transform; }
+.sea { position: absolute; left: 0; top: 0; pointer-events: none; will-change: transform; }
+/* The ground under the sky: as big as the window (main.js sizes it, with a little more below for the
+   landing to overshoot into), the picture all of it in the middle (main.js places it) and round it
+   the fill, the picture's own colours spread over the rest: a wash of them (main.js paints it small
+   from the thumbnail, blurred and a touch dimmed so that the picture stands out) stretched to cover
+   the ground, under a faint white grid like the paper's; a soft shadow under the picture.
+   Its top edge fades out (--band, a share of its height) so the sky shows through the seam during
+   the fall, the fill's further down (main.js masks it) since nothing on it is to be kept clear; the
+   fades go once the window has opened. */
+.scene {
+  position: absolute; left: 0; top: 0; will-change: transform;
+  -webkit-mask-image: linear-gradient(transparent, #000 var(--band, 0%));
+  mask-image: linear-gradient(transparent, #000 var(--band, 0%));
+}
+/* (a finger drawn across the fill moves the soft light, below, rather than the page; pinching still
+   zooms) */
+.scene-fill { position: absolute; inset: 0; overflow: hidden; isolation: isolate; touch-action: pinch-zoom; }
+.scene-fill canvas { position: absolute; left: -8%; top: -8%; width: 116%; height: 116%; object-fit: cover; }
+/* Its grid (::after) is drawn out from the picture's edges once the window opens (main.js masks it,
+   --fill-grid-mask) by a brighter pen running at its edge (::before, --fill-pen-mask, --fill-pen),
+   which goes over it again on the opening screen after the picture has been changed. Over it, on the
+   opening screen, the soft light that follows the pointer lightens what is under it (main.js draws
+   it, and sizes it to the screen from the fill's top-left corner). */
+.scene-fill .scene-light { left: 0; top: 0; z-index: 4; pointer-events: none; mix-blend-mode: screen; }
+.scene-fill::before, .scene-fill::after {
+  content: ""; position: absolute; inset: 0; pointer-events: none;
+  background-image: linear-gradient(var(--line) 1px, transparent 1px), linear-gradient(90deg, var(--line) 1px, transparent 1px);
+  background-size: var(--cell) var(--cell);
+}
+.scene-fill::after { --line: rgba(255, 255, 255, 0.13); z-index: 2; -webkit-mask-image: var(--fill-grid-mask, none); mask-image: var(--fill-grid-mask, none); }
+.scene-fill::before { --line: rgba(255, 255, 255, 0.55); z-index: 3; opacity: var(--fill-pen, 0); -webkit-mask-image: var(--fill-pen-mask, none); mask-image: var(--fill-pen-mask, none); }
+/* The opening screen's ornament (main.js, MEET): its planes under the grid, flat, in colours main.js
+   takes from the fill; over the grid its line work, drawn twice through masks, white (.chalk) where
+   what lies under it is dark and in the picture's deep colour (.ink, a little stronger) where it is
+   light; the AF brackets in blue, the bar group in the corner white like the HUD,
+   the birds blue (white over a dark plane). The lines keep the HUD's weights: mid (1.5px) for the main
+   ray, the bezel's long ticks, her pentagon and the arc on the disc's outer ring, fine (0.75px) for the
+   rest; the heavy marks are shapes main.js draws, the new moon up to 5px wide and the glints on the
+   disc. (The line work's own rules are matched on #meetLines, which the two <use> draw; what differs
+   between them, they pass down.) */
+.scene-fill .meet, .scene-fill .meet-planes { position: absolute; left: 0; top: 0; overflow: visible; pointer-events: none; }
+.scene-fill .meet-planes { z-index: 1; }
+.scene-fill .meet { z-index: 3; }
+.meet-planes > * { fill-opacity: 0.94; }
+.meet .chalk { --k: 1; --lune: 0.85; --shade: 0; --petal: 0.8; color: #fff; }
+.meet .ink { --k: 1.2; --lune: 0.62; --shade: 0.18; --petal: 0.75; color: rgb(var(--tone)); }
+#meetLines * { fill: none; stroke: currentColor; stroke-width: 0.75; }
+#meetLines .ray { stroke-width: 1.5; stroke-opacity: calc(0.62 * var(--k, 1)); }
+#meetLines .ray.side { stroke-width: 0.75; stroke-opacity: calc(0.32 * var(--k, 1)); stroke-dasharray: 1 3; stroke-linecap: round; }
+#meetLines .orbit { stroke-opacity: calc(0.32 * var(--k, 1)); }
+#meetLines .lune { fill: currentColor; fill-opacity: var(--lune, 0.85); stroke: none; }
+#meetLines .hatch { stroke-opacity: calc(0.3 * var(--k, 1)); }
+#meetLines .rim { stroke-opacity: calc(0.34 * var(--k, 1)); }
+#meetLines .track { stroke-opacity: calc(0.36 * var(--k, 1)); }
+#meetLines .track.mid { stroke-width: 1.5; stroke-opacity: calc(0.55 * var(--k, 1)); }
+#meetLines .track.dots { stroke-opacity: calc(0.6 * var(--k, 1)); stroke-dasharray: 1 3; stroke-linecap: round; }
+#meetLines .world, #meetLines .glint * { fill: currentColor; stroke: none; }
+#meetLines .world { fill-opacity: 0.95; }
+#meetLines .glint .spikes { fill-opacity: 0.96; }
+#meetLines .glint .spikes.between { fill-opacity: 0.53; }
+#meetLines .glint .halo { fill-opacity: calc(0.08 * var(--flash, 1)); }   /* (brighter in its flash) */
+#meetLines .glint .halo.in { fill-opacity: calc(0.14 * var(--flash, 1)); }
+#meetLines .point, #meetLines .petal { fill: currentColor; fill-opacity: 0.85; stroke: none; }
+#meetLines .petal { fill-opacity: var(--petal, 0.8); }
+#meetLines .moon { stroke-opacity: calc(0.5 * var(--k, 1)); fill: currentColor; fill-opacity: var(--shade, 0); }
+#meetLines .moon-lit { fill: #fff; fill-opacity: 0.96; stroke: none; }   /* (the lit moon is white on any fill) */
+#meetLines .bezel { stroke-opacity: calc(0.5 * var(--k, 1)); }
+#meetLines .bezel.long { stroke-width: 1.5; stroke-opacity: calc(0.75 * var(--k, 1)); }
+#meetLines .her { stroke-width: 1.5; stroke-opacity: calc(0.92 * var(--k, 1)); stroke-linejoin: round; }
+#meetLines .her.inner { stroke-width: 0.75; stroke-opacity: calc(0.5 * var(--k, 1)); }
+.meet .af { fill: none; stroke: var(--accent); stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+.meet .bars .blinds { fill: url(#meetBlinds); fill-opacity: 0.55; }
+.meet .bars line { stroke: #fff; stroke-width: 0.75; stroke-opacity: 0.45; }
+.meet .bars rect:not(.blinds) { fill: #fff; fill-opacity: 0.55; }
+/* (once the ornament is all in, the birds glide every frame: on a layer of their own, with their mask,
+   they are drawn again alone rather than with all they fly over. While it comes in they stay with the
+   rest, which keeps the page within the GPU memory its layers get; main.js makeMeet, birdFrame) */
+.meet.gliding .birds { will-change: transform; }
+.meet .birds path { fill: var(--accent); fill-opacity: 0.92; }
+.meet .birds.white path { fill: #fff; fill-opacity: 0.95; }
+/* the clear rect each group drawn through a mask starts with (main.js makeMeet: it keeps the group one
+   layer) */
+#meetLines .extent, .meet .extent { fill: #000; fill-opacity: 0; stroke: none; }
+.scene-pic { position: absolute; left: 0; top: 0; }
+.scene-push, .scene-breath { position: absolute; inset: 0; }
+.scene-push { box-shadow: 0 0.8vmin 4vmin rgb(var(--tone) / 0.36); }
+.scene-breath img { position: absolute; inset: 0; display: block; width: 100%; height: 100%; user-select: none; }
+.scene-breath img.near { opacity: 0; }
+.idle .scene-breath { animation: breath 18s ease-in-out infinite alternate; transform-origin: var(--focus, 50% 30%); }
+/* (held while the picture is folded away behind a section: the frosted block behind the section's
+   text, and the picture's own blur if the visitor set one, would be worked out again every frame) */
+.folded .scene-breath { animation-play-state: paused; }
+/* (main.js lays the picture out small enough for the deepest breath, --breath, to keep all of it in) */
+@keyframes breath { to { transform: scale(var(--breath, 1.025)); } }
+/* a still of the picture being put away in the settings, over the new one while it melts away */
+.scene-gone { position: absolute; inset: 0; pointer-events: none; }
+/* the surf's and the petals' canvases; main.js sizes them */
+.surf, .petals { position: absolute; left: 0; top: 0; pointer-events: none; }
+
+/* The equation strip across the sky (decoration only). */
+.strip {
+  position: absolute; left: 4%; right: 4%; top: 56%; display: flex; flex-direction: column; gap: 10px; padding: 12px 18px 12px 22px;
+  color: var(--deep); opacity: 0; font-size: clamp(10px, 0.92vw, 15px);
+  border: 1px solid color-mix(in srgb, var(--deep) 75%, transparent); clip-path: inset(-6px calc(100% * (1 - var(--open, 1))) -6px -6px);
+}
+.strip::before { content: ""; position: absolute; left: -1px; top: -1px; bottom: -1px; width: 4px; background: var(--deep); }
+.strip::after { content: ""; position: absolute; right: -1px; top: -7px; width: 60px; height: 3px; background: var(--deep); }
+.strip .row { display: flex; align-items: center; justify-content: space-between; gap: 1.8em; }
+.strip math { font-family: "STIX Two Math", "Cambria Math", math; font-size: 1em; opacity: var(--in, 1); white-space: nowrap; }
+/* the row ends in blinds and two small squares instead of a legend */
+.strip .tail { display: flex; flex: none; align-items: center; gap: 6px; opacity: var(--in, 1); }
+.strip .tail i { display: block; width: 7px; height: 7px; background: currentColor; }
+.strip .tail i:first-child { width: 40px; height: 8px; background: repeating-linear-gradient(48deg, currentColor 0 2px, transparent 2px 4.5px); }
+.strip .tail i:last-child { opacity: 0.45; }
+.portrait .strip { top: 40%; font-size: clamp(8px, 2.3vw, 12px); }
+.portrait .strip .row { flex-wrap: wrap; justify-content: flex-start; row-gap: 8px; }
+.portrait .strip .tail { display: none; }
+/* The flood of light: a sun glare from the top right with a faint rainbow streak through it. */
+.glow {
+  position: absolute; inset: -20%; opacity: 0; pointer-events: none;
+  background:
+    linear-gradient(118deg, transparent 52%, rgba(255, 196, 120, 0.2) 57%, rgba(170, 236, 150, 0.2) 60%, rgba(130, 196, 255, 0.18) 63%, transparent 68%),
+    radial-gradient(circle at 78% 14%, #fff 0, rgba(255, 252, 240, 0.92) 18%, rgba(255, 247, 225, 0.45) 42%, rgba(255, 255, 255, 0) 70%);
+}
+/* The picture's own deep colour (r g b, which main.js takes from its thumbnail) for what keeps the
+   white lettering clear over it: the shade hugging the name, the one behind the index and the
+   lettering's own shadows. A page opened from a local file cannot read the picture back and keeps
+   this neutral one. */
+.stage { --tone: 33 42 54; }
+/* the shade behind the section index: a strip just wide enough for it along the picture's right
+   edge (its top on a phone); it is in the window, so it leaves with the picture as the window docks */
+.index-shade {
+  position: absolute; top: 0; right: 0; bottom: 0; width: 150px; opacity: 0; pointer-events: none;
+  background: linear-gradient(to left, rgb(var(--tone) / 0.5), rgb(var(--tone) / 0.36) 55%, transparent);
+}
+.portrait .index-shade {
+  left: 0; bottom: auto; width: auto; height: 170px;
+  background: linear-gradient(rgb(var(--tone) / 0.5), rgb(var(--tone) / 0.36) 55%, transparent);
+}
+
+.lens { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+.lens .speed { stroke: rgba(255, 255, 255, 0.85); stroke-width: 1.4; }
+.lens .af { fill: none; stroke: #fff; stroke-width: 2.6; filter: drop-shadow(0 0 1.5px rgba(18, 40, 78, 0.5)); }
+.lens .af.locked { stroke: var(--accent); }
+.lens .cross { stroke: rgba(255, 255, 255, 0.9); stroke-width: 0.75; stroke-dasharray: 3 4; }
+.lens .mark { fill: #fff; }
+.lens .mark-box { fill: none; stroke: #fff; stroke-width: 1; }
+/* The sky develops square by square: paper tiles over the window shrink away. */
+.tiles { position: absolute; inset: 0; pointer-events: none; }
+.tiles i { position: absolute; display: block; background: var(--paper); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ink) 16%, transparent); }
+.window-flash { position: absolute; inset: 0; background: #fff; opacity: 0; pointer-events: none; }
+
+/* The flock (side-view swallows), its speed streaks and pixels, and the tracking marks. */
+.flock { position: absolute; inset: 0; z-index: 4; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+.flock .bird { fill: var(--accent); }
+.flock .bird.far { fill: #4aa9e6; }
+.flock .streak { stroke: rgba(28, 138, 215, 0.4); stroke-width: 1.2; stroke-linecap: round; }
+.flock .px:nth-child(3n) { fill: #1871c2; }
+.flock .px:nth-child(3n + 1) { fill: #1c8ad7; }
+.flock .px:nth-child(3n + 2) { fill: #59bff7; }
+.flock .track rect { fill: none; stroke: var(--ink); stroke-width: 0.75; stroke-dasharray: 4 3; }
+.flock .track .corners { fill: none; stroke: var(--ink); stroke-width: 2.5; }
+.flock .track circle { fill: none; stroke: var(--accent); stroke-width: 0.75; }
+.flock .track polyline { fill: none; stroke: var(--ink); stroke-width: 1; }
+.flock .track .tag { fill: var(--accent); stroke: none; }
+.flock .link { fill: none; stroke: var(--ink); stroke-width: 0.75; stroke-dasharray: 2 4; }
+
+/* HELLO: built from hairlines, rings and outlines, printed in blue; it leaves as dust. In a night sky
+   (main.js: .night-sky) it is printed in the bright blue instead and lightens what is under it, which
+   the night would otherwise swallow. */
+.hello {
+  --hello: var(--accent);
+  position: absolute; inset: 0; z-index: 5; width: 100%; height: 100%; overflow: visible; pointer-events: none; mix-blend-mode: multiply;
+}
+.night-sky .hello { --hello: #59bff7; mix-blend-mode: screen; }
+.hello .letter { fill: var(--hello); stroke: var(--hello); stroke-width: 1.6; stroke-dasharray: 2600; font-family: "Archivo Black", system-ui, sans-serif; transform-box: fill-box; transform-origin: center; }
+.hello .echo { fill: none; stroke: var(--hello); stroke-width: 0.75; opacity: 0.5; font-family: "Archivo Black", system-ui, sans-serif; }
+.hello line, .hello circle, .hello path { fill: none; stroke: var(--hello); stroke-width: 0.75; }
+.hello .rule { stroke: var(--ink); opacity: 0.55; }
+.hello .bar { stroke: var(--ink); stroke-width: 4; }
+.hello circle.heavy { stroke-width: 2.5; }
+.dust { position: absolute; inset: 0; z-index: 5; width: 100%; height: 100%; pointer-events: none; }
+
+/* Viewfinder marks round the screen edge, --m in from it, after the blue-sky film. main.js moves
+   the corners (onto the window for the shot, back out when it opens) and turns the marks white
+   over the opened picture (--hud, --hud-soft). */
+.hud { position: absolute; inset: 0; z-index: 6; pointer-events: none; color: var(--hud, var(--ink)); }
+.hud .corner { position: absolute; left: 0; top: 0; width: 26px; height: 26px; border: 0 solid currentColor; }
+.hud .corner.tl { border-width: 3px 0 0 3px; border-top-left-radius: 10px; }
+.hud .corner.tr { border-width: 3px 3px 0 0; border-top-right-radius: 10px; }
+.hud .corner.bl { border-width: 0 0 3px 3px; border-bottom-left-radius: 10px; }
+.hud .corner.br { border-width: 0 3px 3px 0; border-bottom-right-radius: 10px; }
+.hud .marks { position: absolute; left: calc(var(--m) + 14px); top: calc(var(--m) + 14px); display: flex; gap: 5px; }
+.hud .marks i { display: block; width: 10px; height: 10px; background: var(--accent); transform: scale(var(--pop, 1)); }
+.hud .marks i:nth-child(2) { opacity: 0.5; }
+.hud .marks i:nth-child(3) { opacity: 0.75; }
+/* dash groups at the top and bottom middle; the bottom one is the top one mirrored */
+.hud .dashes { position: absolute; left: 50%; display: flex; transform: translateX(-50%); }
+.hud .dashes.top { top: calc(var(--m) + 17px); }
+.hud .dashes.bottom { bottom: calc(var(--m) + 17px); transform: translateX(-50%) scaleX(-1); }
+.hud .dashes i { display: block; width: 12px; height: 4px; background: var(--hud-soft, #7cbfeb); transform: scaleX(var(--grow, 1)); }
+.hud .dashes i:nth-child(2) { margin-left: 3px; }
+.hud .dashes i:nth-child(3) { width: 9px; margin-left: 9px; }
+.hud .dashes i:nth-child(4) { width: 9px; margin-left: 16px; }
+/* tick meters on both sides; a level mark slides down the left one as the camera sinks and falls */
+.hud .meters { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.hud .meters .ticks { fill: none; stroke: currentColor; stroke-width: 0.75; }
+.hud .meters .level { stroke: var(--accent); stroke-width: 3; }
+.portrait .hud .meters { display: none; }
+/* With a section open (--dock, from main.js) the corners frame the docked picture and the marks
+   that belong to the full-screen picture step out, as do the paper's ornaments (the grid stays);
+   whatever the shrinking picture uncovers early leaves early. The index takes the right-hand
+   meter's place (main.js fades it), on a phone the top dashes'. */
+.hud .marks, .hud .dashes, .hud .meters { opacity: calc(1 - var(--dock, 0)); }
+.portrait .hud .dashes.top { opacity: calc((1 - var(--dock, 0)) * (1 - var(--index-in, 0))); }
+.portrait .hud .dashes.bottom { opacity: calc(1 - min(1, 6 * var(--dock, 0))); }
+.guides { opacity: calc(1 - min(1, 3 * var(--dock, 0))); }
+.hud .rec { position: absolute; right: calc(var(--m) + 14px); top: calc(var(--m) + 14.5px); }
+.hud .rec i { display: block; width: 9px; height: 9px; border-radius: 50%; background: #ff5b5b; }
+.playing .hud .rec i { animation: rec 1s steps(1) infinite; }
+@keyframes rec { 50% { opacity: 0.2; } }
+.hud .ruler {
+  position: absolute; left: calc(var(--wx) - 26px); top: calc(var(--wy) + var(--wh) * 0.1); width: 14px; height: calc(var(--wh) * 0.8);
+  background:
+    repeating-linear-gradient(currentColor 0 2.5px, transparent 2.5px 60px) 0 0 / 14px 60px repeat-y,
+    repeating-linear-gradient(currentColor 0 0.75px, transparent 0.75px 12px) 0 0 / 7px 12px repeat-y;
+  -webkit-mask-image: linear-gradient(transparent, #000 18%, #000 82%, transparent);
+  mask-image: linear-gradient(transparent, #000 18%, #000 82%, transparent);
+}
+.portrait .hud .ruler { display: none; }
+
+/* The name: low on the opened picture, in white over a soft shade (under the window, in ink, while
+   there is no picture); on a wide screen at its bottom left (below), on a phone centred, main.js
+   keeping it centred on the picture (left, width) as the window docks aside, until the docked picture
+   is too small for it and it steps out. Rule lines after the Bocchi template: a thick bar with a
+   hairline above, a dot, a dashed line, a square and 48-degree blinds below. */
+.identity {
+  --name-size: clamp(24px, 3.2vw, 60px);
+  position: absolute; z-index: 6; left: 0; width: 100%; top: calc(var(--wy) + var(--wh) + 3.2vh); color: var(--ink); text-align: center;
+}
+.full .identity { top: auto; bottom: calc(var(--m) + 86px); color: #fff; }
+/* a soft shade hugging the name once it sits on the picture (main.js fades it in, --shade), in the
+   picture's own deep colour and never wider than the picture (--pic-w), so that the fill beside it
+   stays clean. It is kept light (no dark cloud round the name, 2026-10-17); what keeps the white
+   lettering readable on a light picture is mostly its own close shadow, drawn tight round each letter
+   (measured on all the pictures: the name's hardest cases read about as well as under the old, much
+   darker shade, the usual ones a little less) */
+.identity::before {
+  content: ""; position: absolute; left: 50%; top: 50%; z-index: -1; pointer-events: none;
+  width: min(var(--pic-w, 100%), calc(11 * var(--name-size))); height: calc(6 * var(--name-size));
+  transform: translate(-50%, -50%); opacity: var(--shade, 0);
+  background: radial-gradient(closest-side, rgb(var(--tone) / 0.35), rgb(var(--tone) / 0.15) 60%, transparent);
+}
+.name { margin: 0; color: inherit; font: var(--name-size) / 1 "Archivo Black", system-ui, sans-serif; letter-spacing: -0.01em; transform-origin: center; }
+.full .name { text-shadow: 0 1px 2px rgb(var(--tone) / 0.7), 0 0 6px rgb(var(--tone) / 0.45), 0 2px 16px rgb(var(--tone) / 0.45); }
+.deco { display: flex; align-items: center; justify-content: center; gap: 7px; pointer-events: none; }
+.full .deco { filter: drop-shadow(0 1px 3px rgb(var(--tone) / 0.4)); }
+.deco.top { height: 6px; margin-bottom: 14px; }
+.deco.bottom { height: 9px; margin-top: 14px; }
+.deco i { display: block; flex: none; background: currentColor; transform: scaleX(var(--grow, 1)); transform-origin: center; }
+.deco [data-part="thick"] { width: clamp(44px, 6vw, 110px); height: 5px; }
+.deco [data-part="thin"] { width: clamp(90px, 14vw, 260px); height: 1px; }
+.deco [data-part="dot"] { width: 4px; height: 4px; transform: scale(var(--grow, 1)); }
+.deco [data-part="dash"] { width: clamp(60px, 9vw, 160px); height: 0; background: none; border-top: 1px dashed currentColor; }
+.deco [data-part="square"] { width: 8px; height: 8px; transform: scale(var(--grow, 1)); }
+.deco [data-part="blinds"] {
+  width: 56px; height: 8px; transform: none; opacity: var(--grow, 1);
+  background: repeating-linear-gradient(48deg, currentColor 0 2px, transparent 2px calc(2px + var(--gap, 2px)));
+}
+.portrait .identity { --name-size: clamp(22px, 7.2vw, 60px); }
+/* On a wide screen the opened picture's name sits at its bottom left over the replay button, a size
+   smaller and left-aligned, its rules a legend of the ornament on the fill: over it the heavy short
+   bar and the fine long line (the new moon and the orbit), under it a point, a fine dashed line and a
+   small hatched block (point, line and plane, as the screen goes from left to right). main.js leaves
+   it where these put it (on a phone it stays centred under the picture, as above). */
+.stage.full:not(.portrait) .identity {
+  --name-size: clamp(20px, 2.5vw, 46px);
+  left: calc(var(--m) + 14px); width: max-content; bottom: calc(var(--m) + 14px + 40px + 22px); text-align: left;
+}
+.stage:not(.portrait) .name { transform-origin: left center; }
+.stage:not(.portrait) .identity .deco { justify-content: flex-start; gap: 6px; }
+.stage:not(.portrait) .identity .deco.top { margin-bottom: 12px; }
+.stage:not(.portrait) .identity .deco.bottom { gap: 8px; height: 10px; margin-top: 12px; }
+.stage:not(.portrait) .identity .deco i { transform-origin: left center; }
+.stage:not(.portrait) .identity [data-part="thick"] { width: calc(1.8 * var(--name-size)); }
+.stage:not(.portrait) .identity [data-part="thin"] { width: calc(4.6 * var(--name-size)); height: 0.75px; }
+.stage:not(.portrait) .identity [data-part="dot"] { width: 5px; height: 5px; border-radius: 50%; }
+.stage:not(.portrait) .identity [data-part="dash"] {
+  width: calc(2.9 * var(--name-size)); height: 0.75px; border: 0; background: repeating-linear-gradient(90deg, currentColor 0 3px, transparent 3px 6px);
+}
+.stage:not(.portrait) .identity [data-part="square"] { display: none; }
+.stage:not(.portrait) .identity [data-part="blinds"] {
+  width: calc(1.6 * var(--name-size)); height: 10px;
+  background: repeating-linear-gradient(135deg, currentColor 0 0.75px, transparent 0.75px calc(0.75px + var(--gap, 2.08px)));
+}
+
+/* (it only ever shows over the picture, so its colours keep to the day's ink whatever the paper) */
+.replay {
+  position: absolute; z-index: 7; bottom: calc(30px + 2.5vh); left: 3vw; display: grid; place-items: center; width: 42px; height: 42px; padding: 0;
+  border: 2px solid #66748a; border-radius: 50%; background: rgba(255, 255, 255, 0.85); color: #3c4458; cursor: var(--cursor-click); --pointer: click;
+  transition: background 0.2s, border-color 0.2s;
+}
+.replay:active { cursor: var(--cursor-press); --pointer: press; }
+.replay svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.replay:hover { background: #fff; border-color: #3c4458; }
+.replay:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+.playing .replay { pointer-events: none; }
+/* on a wide screen it sits in the bottom-left corner under the name, on the picture: a white ring on
+   the medium weight over a faint shade of the picture's deep colour, like the HUD */
+.stage:not(.portrait) .replay {
+  left: calc(var(--m) + 14px); bottom: calc(var(--m) + 14px); width: 40px; height: 40px;
+  border: 1.5px solid #fff; background: rgb(var(--tone) / 0.16); color: #fff;
+  filter: drop-shadow(0 0 1px rgb(var(--tone) / 0.6)) drop-shadow(0 1px 8px rgb(var(--tone) / 0.3));
+}
+.stage:not(.portrait) .replay svg { stroke-width: 1.75; }
+.stage:not(.portrait) .replay:hover { background: rgb(var(--tone) / 0.34); border-color: #fff; }
+
+/* The section index, like a viewfinder's focus points: a numbered square for the opening screen
+   (00), one for each section and the last one for the settings (04), titled beside it (under it on
+   a phone). A title comes up only while the pointer rests on its square or the keyboard's focus is
+   on it (an open section shows its own, 2026-10-21; 00 has none). The current one is filled blue and
+   focus brackets jump to it and lock on (main.js zooms them in at the end of the opening, --zoom and
+   --seen). Beside the squares runs a focus scale like a lens's (main.js draws it). It wears the HUD's
+   colours: white with a faint shadow over the picture, ink on the paper (main.js places it and sets
+   .on-paper). */
+@property --idx { syntax: '<color>'; inherits: true; initial-value: #fff; }
+.index {
+  --idx: #fff;
+  position: absolute; left: 0; top: 0; z-index: 8; display: flex; flex-direction: column; align-items: flex-end;
+  gap: clamp(14px, 2.4vh, 22px); padding: 12px 0; color: var(--idx); opacity: 0;
+  filter: drop-shadow(0 0 1px rgb(var(--tone) / 0.6)) drop-shadow(0 1px 10px rgb(var(--tone) / 0.3));
+  transition: --idx 0.25s, filter 0.25s;
+}
+.index.on-paper { --idx: var(--ink); filter: none; }
+.index a {
+  position: relative; display: flex; align-items: center; gap: 15px; color: inherit; text-decoration: none; cursor: var(--cursor-click); --pointer: click;
+  -webkit-tap-highlight-color: transparent;
+}
+.index a:active { cursor: var(--cursor-press); --pointer: press; }
+.index a:focus-visible { outline: 2px solid var(--accent); outline-offset: 5px; }
+.index span { font: 500 12px / 1 Inter, system-ui, sans-serif; letter-spacing: 0.2em; opacity: 0; transition: opacity 0.25s; }
+.index a:focus-visible span { opacity: 0.85; }
+@media (hover: hover) { .index a:hover span { opacity: 0.85; } }
+/* the focus scale: a fine hairline with fine ticks, a long tick at each square, the current one's blue */
+.index .scale { position: absolute; left: 0; top: 0; width: 1px; height: 1px; overflow: visible; pointer-events: none; }
+.index .scale path { fill: none; stroke: currentColor; stroke-linecap: butt; }
+.index .scale .fine { stroke-width: 1; opacity: 0.7; }
+.index .scale .long { stroke-width: 1.5; opacity: 0.9; }
+.index .scale .lit { stroke: var(--accent); stroke-width: 2.5; }
+.index b {
+  display: grid; place-items: center; width: clamp(44px, 6.6vh, 60px); aspect-ratio: 1; border: 2px solid var(--idx); border-radius: 9px;
+  font: clamp(15px, 2.2vh, 20px) / 1 "Archivo Black", system-ui, sans-serif; transition: background-color 0.3s, border-color 0.3s, color 0.3s;
+}
+.index .active b { background: var(--accent); border-color: var(--accent); color: #fff; }
+.index a:not(.active):hover b { background: color-mix(in srgb, var(--idx) 20%, transparent); }
+/* Focus brackets (here and round the chosen picture and time of day in the settings): a rounded frame
+   shown only at its four corners, so each bracket bends round its corner. */
+.index .brackets, .pick[aria-pressed="true"]::after, .time[aria-pressed="true"]::after {
+  -webkit-mask:
+    linear-gradient(#000 0 0) left top / var(--l) var(--l), linear-gradient(#000 0 0) right top / var(--l) var(--l),
+    linear-gradient(#000 0 0) left bottom / var(--l) var(--l), linear-gradient(#000 0 0) right bottom / var(--l) var(--l);
+  -webkit-mask-repeat: no-repeat;
+  mask:
+    linear-gradient(#000 0 0) left top / var(--l) var(--l), linear-gradient(#000 0 0) right top / var(--l) var(--l),
+    linear-gradient(#000 0 0) left bottom / var(--l) var(--l), linear-gradient(#000 0 0) right bottom / var(--l) var(--l);
+  mask-repeat: no-repeat;
+}
+.index .brackets {
+  --o: 10px; --l: 16px; --t: 3px;
+  position: absolute; left: 0; top: 0; width: calc(var(--s, 0px) + 2 * var(--o)); height: calc(var(--s, 0px) + 2 * var(--o));
+  transform: translate(calc(var(--x, 0px) - var(--o)), calc(var(--y, 0px) - var(--o))) scale(var(--zoom, 1));
+  opacity: var(--seen, 1); pointer-events: none;
+  border: var(--t) solid var(--idx); border-radius: 12px;
+}
+.index .brackets.lock { animation: index-lock 0.45s cubic-bezier(0.2, 0.9, 0.3, 1.2) both; }
+@keyframes index-lock {
+  from { opacity: 0; transform: translate(calc(var(--x, 0px) - var(--o)), calc(var(--y, 0px) - var(--o))) scale(1.7); }
+}
+.playing .index { pointer-events: none; }
+/* (a title hangs under its square, so the squares are evenly spaced however long the titles; the
+   index keeps room for it below) */
+.portrait .index { flex-direction: row; align-items: flex-start; gap: 22px; padding: 0 0 18px; }
+.portrait .index b { width: 40px; font-size: 14px; border-radius: 7px; }
+.portrait .index span {
+  position: absolute; left: 50%; top: calc(100% + 8px); padding-left: 0.14em;
+  font-size: 9.5px; letter-spacing: 0.14em; white-space: nowrap; transform: translateX(-50%);
+}
+.portrait .index .brackets { --o: 7px; --l: 12px; --t: 2.5px; border-radius: 9px; }
+
+/* The divider between the docked picture and the panel (main.js places it on the picture's right
+   edge, or on the screen's left edge once the picture is folded away: .edge). It is not seen until
+   the pointer comes onto it; then a blue hairline and a small grip come up, and stay lit while it is
+   dragged or has the keyboard's focus. */
+.divider { position: absolute; left: 0; top: 0; z-index: 7; width: 12px; height: 100%; cursor: col-resize; --pointer: resize; touch-action: none; outline: none; }
+.divider::before, .divider .grip { position: absolute; background: var(--accent); opacity: 0; transition: opacity 0.15s; }
+.divider::before { content: ""; left: 5.5px; top: 0; bottom: 0; width: 1px; }
+.divider .grip { left: 4px; top: 50%; width: 4px; height: 40px; margin-top: -20px; }
+.divider.edge::before, .divider.edge .grip { left: 0; }
+.divider:hover::before, .divider:hover .grip, .divider.dragging::before, .divider.dragging .grip,
+.divider:focus-visible::before, .divider:focus-visible .grip { opacity: 1; }
+/* while it is dragged the whole page shows the resize pointer and nothing gets selected (and the
+   closed hand while a ruler in the settings is) */
+.resizing, .resizing * { cursor: col-resize !important; --pointer: resize !important; user-select: none; }
+.grabbing, .grabbing * { cursor: grabbing !important; --pointer: grabbing !important; }
+
+/* The panel on the paper beside the docked picture (under it on a phone, below the index strip);
+   main.js gives its box (--px, --py, --pw, --ph). A long section scrolls inside it. With the picture
+   folded away behind the section, the panel is a wide column in the middle of the screen and the
+   section sits on a frosted block straight on the picture, with no paper under it, laid out across
+   the column (.spread, below). It does not travel there: main.js fades the section out, puts the box
+   in the column halfway through the fold with --fold (0 or 1, which evens out its side padding),
+   .over and .spread, and fades the section in there. The section is lettered with --pen, ink on the
+   paper; over the picture it is white with a faint shadow, like the HUD, and its faint lines and bars
+   are a little stronger (--over, 0 or 1). A section fades in whenever it is shown; the panel itself
+   shows at once (while it faded, the frosted block in it could not blur the picture behind until the
+   fade was over). */
+@property --pen { syntax: '<color>'; inherits: true; initial-value: #3c4458; }
+@property --over { syntax: '<number>'; inherits: true; initial-value: 0; }
+/* the box (it changes on every frame of a drag of the divider) and the fold are the panel's alone:
+   not inherited, so the section inside is not restyled each time */
+@property --px { syntax: '<length>'; inherits: false; initial-value: 0px; }
+@property --py { syntax: '<length>'; inherits: false; initial-value: 0px; }
+@property --pw { syntax: '<length>'; inherits: false; initial-value: 0px; }
+@property --ph { syntax: '<length>'; inherits: false; initial-value: 0px; }
+@property --fold { syntax: '<number>'; inherits: false; initial-value: 0; }
+@property --f { syntax: '<number>'; inherits: false; initial-value: 0; }
+.panel {
+  --f: var(--fold, 0);
+  --pen: var(--ink); --over: 0;
+  position: absolute; left: var(--px, 0); top: var(--py, 0); width: var(--pw, 0); height: var(--ph, 0); z-index: 5;
+  overflow-y: auto; overscroll-behavior: contain; container-type: inline-size;
+  padding:
+    clamp(48px, 9vh, 84px)
+    calc(28px * (1 - var(--f)) + clamp(28px, 3vw, 48px) * var(--f))
+    80px
+    calc(clamp(32px, 4vw, 60px) * (1 - var(--f)) + clamp(28px, 3vw, 48px) * var(--f));
+  color: var(--pen);
+  text-shadow: 0 1px 2px rgb(var(--tone) / calc(0.45 * var(--over))), 0 2px 16px rgb(var(--tone) / calc(0.35 * var(--over)));
+  opacity: 0; pointer-events: none;
+  scrollbar-width: thin; scrollbar-color: color-mix(in srgb, var(--ink) 30%, transparent) transparent;
+}
+.panel.open { opacity: 1; pointer-events: auto; }
+.panel.over { --pen: #fff; --over: 1; scrollbar-color: rgba(255, 255, 255, 0.35) transparent; }
+.portrait .panel { padding: 14px 20px 48px; }
+/* The frosted block: over the picture folded away, the picture behind the section's text is blurred
+   and shaded (in the picture's own deep colour, --tone), with the white lettering. How strongly is
+   the visitor's (--glass, 0 to 1, in the settings; main.js sets it): the usual 0.5 is a 16px blur
+   under a 32% shade, 0 no block at all. The block reaches a little past the text, with rounded
+   corners, and scrolls with it (the settings' block keeps to the screen, their pictures scrolling
+   inside it). */
+.pane { margin: -28px -26px; padding: 28px 26px; border-radius: 14px; animation: pane-fade 0.3s both; }
+@keyframes pane-fade { from { opacity: 0; } }
+.folded .pane {
+  -webkit-backdrop-filter: blur(calc(32px * var(--glass, 0.5) * var(--over)));
+  backdrop-filter: blur(calc(32px * var(--glass, 0.5) * var(--over)));
+  background: rgb(var(--tone) / calc(0.64 * var(--glass, 0.5) * var(--over)));
+}
+.portrait .pane { margin: 0; padding: 0; }
+/* a section takes the keyboard's focus when it is shown, so the keys scroll it; no ring round it */
+.pane:focus { outline: none; }
+.pane-title { margin: 0; color: var(--pen); font: clamp(30px, 3.4vw, 56px) / 1 "Archivo Black", system-ui, sans-serif; letter-spacing: -0.01em; transform-origin: left center; }
+.pane-rules { display: flex; align-items: center; gap: 7px; margin: 16px 0 28px; }
+.pane-rules i { display: block; width: 44px; height: 5px; background: var(--pen); transform-origin: left center; }
+.pane-rules i + i { width: 140px; height: 1px; }
+/* placeholders: grey bars standing in for the words until they are written */
+.sk { display: block; width: var(--w); height: 9px; margin: 11px 0; border-radius: 2px; background: color-mix(in srgb, var(--pen) calc(12% + 12% * var(--over)), transparent); transform-origin: left center; }
+.sk.head { height: 14px; background: color-mix(in srgb, var(--pen) calc(24% + 18% * var(--over)), transparent); }
+.about-text { max-width: 560px; }
+/* projects: specimen plates, two to a row; a picture's place is a pale blue outline over 48-degree
+   blinds on a lighter patch of the paper (only just lighter on the night paper) with a centre cross
+   and two heavy corners, over a dimension line (on the picture: a white outline over faint white
+   blinds, with nothing under them) */
+.projects { display: grid; grid-template-columns: 1fr 1fr; gap: 30px 26px; }
+.plate-shot {
+  position: relative; aspect-ratio: 1; border: 1px solid color-mix(in srgb, var(--pale), rgba(255, 255, 255, 0.6) calc(100% * var(--over)));
+  background:
+    repeating-linear-gradient(48deg, color-mix(in srgb, rgba(28, 138, 215, 0.1), rgba(255, 255, 255, 0.12) calc(100% * var(--over))) 0 2px, transparent 2px 7px),
+    rgba(255, 255, 255, calc((0.6 - 0.56 * var(--light)) * (1 - var(--over))));
+}
+.plate-shot .cross::before, .plate-shot .cross::after {
+  content: ""; position: absolute; left: 50%; top: 50%; background: var(--pen); opacity: 0.55; transform: translate(-50%, -50%);
+}
+.plate-shot .cross::before { width: 14px; height: 1px; }
+.plate-shot .cross::after { width: 1px; height: 14px; }
+.plate-shot .tick { position: absolute; width: 14px; height: 14px; border: 0 solid var(--pen); }
+.plate-shot .tick.tl { left: -1px; top: -1px; border-width: 3px 0 0 3px; }
+.plate-shot .tick.br { right: -1px; bottom: -1px; border-width: 0 3px 3px 0; }
+.plate-dim { --dim: color-mix(in srgb, var(--pen) calc(55% + 5% * var(--over)), transparent); position: relative; height: 8px; margin: 10px 0 6px; border-top: 1px solid var(--dim); }
+.plate-dim::before, .plate-dim::after { content: ""; position: absolute; top: -5px; width: 1px; height: 9px; background: var(--dim); }
+.plate-dim::before { left: 0; }
+.plate-dim::after { right: 0; }
+/* contact entries: a round icon, a small label over the account, and a mark for what a click does
+   (an arrow out for a link; two sheets for the e-mail address, which a click copies, turning to a
+   tick with COPIED by the label for a moment). Pointed at, the ring and the mark go blue. */
+.contact { max-width: 520px; margin: 0; padding: 0; list-style: none; }
+.contact li { padding: 14px 0; border-top: 1px solid color-mix(in srgb, var(--pen) calc(18% + 8% * var(--over)), transparent); }
+.reach {
+  display: flex; align-items: center; gap: 16px; width: 100%; margin: 0; padding: 0; border: 0; background: none;
+  color: inherit; font: inherit; text-align: left; text-decoration: none; text-shadow: inherit;
+}
+a.reach, button.reach { cursor: var(--cursor-click); --pointer: click; -webkit-tap-highlight-color: transparent; }
+a.reach:active, button.reach:active { cursor: var(--cursor-press); --pointer: press; }
+.reach:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; border-radius: 4px; }
+.reach-text { display: grid; flex: 1; gap: 7px; min-width: 0; }
+.reach b { color: color-mix(in srgb, var(--pen) 75%, transparent); font: 500 11px / 1 Inter, system-ui, sans-serif; letter-spacing: 0.16em; }
+.reach.copied b::after { content: " · COPIED"; color: var(--pen); }
+.reach-id { overflow: hidden; color: var(--pen); font: 600 16px / 1.2 Inter, system-ui, sans-serif; white-space: nowrap; text-overflow: ellipsis; }
+.contact .sk { flex: none; margin: 0; }
+.contact .ico { display: grid; flex: none; place-items: center; width: 38px; height: 38px; border: 1.5px solid var(--pen); border-radius: 50%; transition: border-color 0.2s; }
+.contact svg { width: 18px; height: 18px; fill: none; stroke: var(--pen); stroke-width: 1.6; }
+.contact svg .fill { fill: var(--pen); stroke: none; }
+.contact .reach-go { flex: none; width: 16px; height: 16px; opacity: 0.6; transition: opacity 0.2s, stroke 0.2s, transform 0.2s; }
+.reach-go .done, .reach.copied .reach-go .copy { display: none; }
+.reach.copied .reach-go .done { display: inline; }
+@media (hover: hover) {
+  a.reach:hover .ico, button.reach:hover .ico { border-color: var(--accent); }
+  a.reach:hover .reach-go, button.reach:hover .reach-go { opacity: 1; stroke: var(--accent); }
+  a.reach:hover .reach-go { transform: translate(2px, -2px); }
+}
+/* the settings: four parts under small headings with a blue square (on a phone only the time and the
+   pictures); the title, the blur and the time go together (.set-lead), for the settings spread across
+   the middle */
+.set-part + .set-part, .set-lead + .set-part { margin-top: 34px; }
+.set-head {
+  display: flex; align-items: center; gap: 0.6em; margin: 0 0 14px; color: var(--pen);
+  font: 600 12px / 1 Inter, system-ui, sans-serif; letter-spacing: 0.2em;
+}
+.set-head::before { content: ""; width: 0.85em; height: 0.85em; background: var(--accent); }
+.set-row {
+  display: grid; grid-template-columns: 120px 1fr; align-items: center; gap: 14px; margin: 4px 0;
+  font: 500 12px / 1 Inter, system-ui, sans-serif; letter-spacing: 0.06em;
+  cursor: inherit;   /* (a label would have the system's arrow) */
+}
+/* the blur rulers: a hairline with a tick at every tenth and a taller one at the usual setting
+   (--def), and a square handle, blue while the pointer is on it or it is dragged; no numbers. The
+   ticks line up with the handle's centre, which runs from 6px in at either end. A click on the ticks
+   moves the handle there. */
+.ruler {
+  --track:
+    linear-gradient(var(--pen) 0 0) calc(6px + (100% - 11px) * var(--def)) 50% / 1px 15px no-repeat,
+    repeating-linear-gradient(to right, color-mix(in srgb, var(--pen) 60%, transparent) 0 1px, transparent 1px calc((100% - 1px) / 10))
+      6px 50% / calc(100% - 11px) 7px no-repeat,
+    linear-gradient(var(--pen) 0 0) 6px 50% / calc(100% - 12px) 1px no-repeat;
+  -webkit-appearance: none; appearance: none; width: 100%; height: 24px; margin: 0; background: transparent; cursor: var(--cursor-click); --pointer: click;
+}
+.ruler::-webkit-slider-runnable-track { height: 24px; background: var(--track); }
+.ruler::-moz-range-track { height: 24px; background: var(--track); }
+.ruler::-webkit-slider-thumb {
+  -webkit-appearance: none; width: 12px; height: 12px; margin-top: 6px; border: 0; border-radius: 3px; background: var(--pen);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) calc(100% * var(--over)), transparent);
+  cursor: grab; transition: background-color 0.2s;
+}
+.ruler::-moz-range-thumb {
+  width: 12px; height: 12px; border: 0; border-radius: 3px; background: var(--pen);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) calc(100% * var(--over)), transparent);
+  cursor: grab; transition: background-color 0.2s;
+}
+@media (hover: hover) {
+  .ruler::-webkit-slider-thumb:hover { background: var(--accent); }
+  .ruler::-moz-range-thumb:hover { background: var(--accent); }
+}
+.ruler:active::-webkit-slider-thumb { background: var(--accent); }
+.ruler:active::-moz-range-thumb { background: var(--accent); }
+.ruler:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; }
+/* the time of day: four tiles like the pictures' below, an icon over a word, the one chosen with a blue
+   edge and focus brackets; under them what the time is now, and the sun's last and next rising or
+   setting (main.js) */
+.times { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; max-width: 520px; }
+.time {
+  position: relative; display: grid; place-content: center; justify-items: center; gap: 9px; height: 74px; padding: 0; border-radius: 8px;
+  border: 1px solid color-mix(in srgb, var(--pen) 40%, transparent); background: color-mix(in srgb, var(--pen) 8%, transparent);
+  color: var(--pen); font: 600 10px / 1 Inter, system-ui, sans-serif; letter-spacing: 0.2em;
+  cursor: var(--cursor-click); --pointer: click; transition: border-color 0.2s; -webkit-tap-highlight-color: transparent;
+}
+.time:active { cursor: var(--cursor-press); --pointer: press; }
+.time svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+.time:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+@media (hover: hover) { .time:hover { border-color: var(--pen); } }
+.time[aria-pressed="true"] { border: 2px solid var(--accent); cursor: var(--cursor); --pointer: rest; }
+.time[aria-pressed="true"]::after {
+  --l: 16px;
+  content: ""; position: absolute; inset: -9px; pointer-events: none;
+  border: 2.5px solid var(--pen); border-radius: 13px;
+}
+.time-now { min-height: 12px; margin: 14px 0 0; font: 500 12px / 1 Inter, system-ui, sans-serif; letter-spacing: 0.06em; opacity: 0.8; }
+.time-now::before { content: ""; display: inline-block; width: 6px; height: 6px; margin: 0 8px 1px 0; background: var(--accent); }
+/* the pictures: a random one each time, then a tile for each, showing it as it is put up on this
+   screen (--screen, the screen's shape, from main.js): all of it in the middle, on its own colours
+   spread round it; the one chosen has a blue edge and focus brackets (and, since choosing it again
+   does nothing, no clicking pointer) */
+.picks { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px 14px; }
+.pick {
+  position: relative; display: block; aspect-ratio: var(--screen, 16 / 9); padding: 0; border-radius: 8px;
+  border: 1px solid color-mix(in srgb, var(--pen) 40%, transparent); background: color-mix(in srgb, var(--pen) 8%, transparent);
+  color: var(--pen); cursor: var(--cursor-click); --pointer: click; transition: border-color 0.2s; -webkit-tap-highlight-color: transparent;
+}
+.pick:active { cursor: var(--cursor-press); --pointer: press; }
+.pick img { position: relative; display: block; width: 100%; height: 100%; object-fit: contain; border-radius: 7px; }
+.pick img.pick-fill {
+  position: absolute; left: -8px; top: -8px; width: calc(100% + 16px); height: calc(100% + 16px);
+  object-fit: cover; filter: blur(8px) brightness(0.86) saturate(1.2); clip-path: inset(8px round 7px);
+}
+.pick:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+@media (hover: hover) { .pick:hover { border-color: var(--pen); } }
+.pick[aria-pressed="true"] { border: 2px solid var(--accent); cursor: var(--cursor); --pointer: rest; }
+.pick[aria-pressed="true"]::after {
+  --l: 16px;
+  content: ""; position: absolute; inset: -9px; pointer-events: none;
+  border: 2.5px solid var(--pen); border-radius: 13px;
+}
+.pick.random {
+  display: grid; place-content: center; justify-items: center; gap: 8px;
+  font: 600 10px / 1 Inter, system-ui, sans-serif; letter-spacing: 0.2em;
+}
+.pick.random svg { width: 26px; height: 26px; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+/* the keyboard: a 75% board on a grid of quarter keys (main.js places the keys). The page's own keys
+   are blue, with the question-mark pointer; one pointed at is said in the line under the board (it
+   fades in, and out once the pointer is on another key or off the board), and a key pressed lights up
+   a moment.
+   The legends grow with the board (a container) a pixel at a time, about 1.6% of its width (--u, from
+   6px to 10px; a fifth more on the page's own keys). Not smoothly: a size following the width would
+   have every key restyled and laid out again on each frame of a fold. */
+.set-keys { container-type: inline-size; }
+.kb {
+  --u: 6px;
+  display: grid; grid-template-columns: repeat(64, 1fr); grid-template-rows: 1fr 0.3fr repeat(5, 1fr); aspect-ratio: 16 / 6.3;
+  -webkit-tap-highlight-color: transparent;
+}
+@container (min-width: 440px) { .kb { --u: 7px; } }
+@container (min-width: 500px) { .kb { --u: 8px; } }
+@container (min-width: 560px) { .kb { --u: 9px; } }
+@container (min-width: 625px) { .kb { --u: 10px; } }
+.k {
+  display: grid; place-items: center; min-width: 0; margin: 2px; overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--pen) 40%, transparent); border-radius: 3px;
+  color: color-mix(in srgb, var(--pen) 55%, transparent); font: 500 var(--u) / 1 Inter, system-ui, sans-serif;
+  font-style: normal; white-space: nowrap; text-shadow: none;
+}
+.k.on {
+  border-color: var(--accent); background: var(--accent); color: #fff; font-weight: 700; font-size: calc(1.2 * var(--u));
+  cursor: var(--cursor-help); --pointer: help; transition: background-color 0.2s;
+}
+/* a long legend on a one-unit key (PrtSc, Home...) is set a quarter smaller on a board too small for it */
+.k.small { font-size: calc(0.75 * var(--u)); }
+@container (min-width: 380px) { .k.small { font-size: var(--u); } }
+@media (hover: hover) { .k.on:hover { background: color-mix(in srgb, var(--accent), #fff 22%); } }
+.k.hit { animation: key-hit 0.35s ease-out; }
+@keyframes key-hit { from { border-color: var(--pen); background: var(--pen); color: var(--accent); } }
+.kb-say {
+  display: flex; align-items: center; gap: 10px; min-height: 22px; margin: 12px 0 0;
+  font: 500 12px / 1 Inter, system-ui, sans-serif; letter-spacing: 0.06em; opacity: 0; transition: opacity 0.2s;
+}
+.kb-say.on { opacity: 1; }
+.kb-say kbd {
+  display: grid; place-items: center; min-width: 20px; height: 20px; padding: 0 5px; border: 1px solid var(--pen); border-radius: 3px;
+  font: 600 11px / 1 Inter, system-ui, sans-serif; letter-spacing: 0;
+}
+.portrait .set-blur, .portrait .set-keys { display: none; }
+/* (the time straight under the title, the blur being left out) */
+.portrait .set-part + .set-part { margin-top: 0; }
+.portrait .set-lead + .set-part { margin-top: 28px; }
+.portrait .times, .portrait .picks { gap: 12px 10px; }
+.portrait .time { height: 64px; }
+/* read out, not shown */
+.sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }
+@container (max-width: 520px) { .projects { gap: 20px 16px; } }
+@container (max-width: 300px) { .projects { grid-template-columns: 1fr; } }
+/* Spread across the wide column in the middle of the screen, the picture folded away (.spread,
+   main.js): the contact rows side by side, the project plates four to a row, and the settings in two
+   tiers, the title and the blur beside the keyboard over all the pictures, which scroll on their own
+   while the rest stays put (the block kept to the screen's height less the panel's margins). A
+   window too narrow for that keeps them as they are beside the picture. */
+@container (min-width: 760px) {
+  .panel.spread .contact { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0 32px; max-width: none; }
+  .panel.spread .projects { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .panel.spread .settings:not([hidden]) {
+    display: grid; grid-template: auto minmax(0, 1fr) / minmax(0, 1fr) minmax(0, 1.15fr); column-gap: 56px;
+    max-height: calc(100vh - clamp(48px, 9vh, 84px) - 24px);
+  }
+  .panel.spread .set-lead { grid-area: 1 / 1; }
+  .panel.spread .set-blur { max-width: 520px; }
+  .panel.spread .set-keys { grid-area: 1 / 2; max-width: 640px; margin-top: 0; }
+  .panel.spread .set-bg { grid-area: 2 / 1 / 3 / 3; display: flex; flex-direction: column; min-height: 0; }
+  .panel.spread .picks {
+    flex: 1 1 auto; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); min-height: 0;
+    overflow-y: auto; overscroll-behavior: contain;
+    padding: 12px 10px; margin: -12px -10px;   /* room inside the scrolling for the chosen one's brackets */
+    scrollbar-width: thin; scrollbar-color: rgba(255, 255, 255, 0.35) transparent;
+  }
+}
+/* The page's own scrollbars (main.js: makeScrollbar) for the panel and the settings' pictures spread
+   across the middle, where the pointer is a mouse: over the browser's own the browser shows its own
+   pointer whatever the page asks for, and the drawn one (pointer.js) would give way to it. A thin thumb
+   down the right edge of what scrolls, a little wider and stronger while the pointer is over it or it
+   is dragged; white over the picture, like the lettering. Elsewhere (a touch screen, forced colours)
+   the browser's own. */
+.scrollbar { display: none; }
+@media (hover: hover) and (pointer: fine) and (forced-colors: none) {
+  .panel, .panel.spread .picks { scrollbar-width: none; }
+  .panel::-webkit-scrollbar, .picks::-webkit-scrollbar { display: none; }
+  .scrollbar.on {
+    display: block; position: absolute; z-index: 6; width: 12px; touch-action: none;
+    cursor: var(--cursor-click); --pointer: click;
+  }
+  .panel + .scrollbar { left: calc(var(--px) + var(--pw) - 12px); top: var(--py); height: var(--ph); }
+  .scrollbar i {
+    position: absolute; right: 3px; top: 0; width: 4px; border-radius: 2px;
+    background: color-mix(in srgb, var(--ink) 30%, transparent); cursor: grab; --pointer: grab;
+    transition: width 0.15s, background-color 0.15s;
+  }
+  .scrollbar:hover i, .scrollbar.held i { width: 6px; background: color-mix(in srgb, var(--ink) 50%, transparent); }
+  .scrollbar.over i { background: rgba(255, 255, 255, 0.35); }
+  .scrollbar.over:hover i, .scrollbar.over.held i { background: rgba(255, 255, 255, 0.6); }
+}
+/* entrances, after the Bocchi template: the title grows from 85% as it rises, the rules and bars
+   draw on, the blocks rise one after another (they replay whenever a section is shown) */
+.pane-title { animation: pane-grow 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+.pane-rules i { animation: pane-draw 0.45s 0.1s ease-out both; }
+.pane-rules i + i { animation-delay: 0.18s; }
+.pane .sk { animation: pane-draw 0.45s 0.2s ease-out both; }
+.plate, .contact li { animation: pane-rise 0.45s ease-out both; }
+:is(.plate, .contact li):nth-child(2) { animation-delay: 0.08s; }
+:is(.plate, .contact li):nth-child(3) { animation-delay: 0.16s; }
+:is(.plate, .contact li):nth-child(4) { animation-delay: 0.24s; }
+.set-part { animation: pane-rise 0.45s ease-out both; }
+.set-bg { animation-delay: 0.08s; }
+.set-keys { animation-delay: 0.16s; }
+@keyframes pane-grow { from { opacity: 0; transform: translateY(10px) scale(0.85); } }
+@keyframes pane-draw { from { transform: scaleX(0); } }
+@keyframes pane-rise { from { opacity: 0; transform: translateY(12px); } }
+
+/* The shutter: a dark blink when the picture is taken. */
+.shutter { position: absolute; inset: 0; z-index: 10; background: #10151d; opacity: 0; pointer-events: none; }
+
+/* (a key pressed still lights up on the settings' keyboard: it does not move) */
+@media (prefers-reduced-motion: reduce) {
+  .idle .scene-breath, .pane *:not(.k), .index .brackets.lock { animation: none !important; }
+}

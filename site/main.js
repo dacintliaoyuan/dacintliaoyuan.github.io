@@ -1,6 +1,6 @@
 // Opening of dacint_liaoyuan's homepage, shot like a camera on graph paper.
 //   1. Construction lines are drawn on the paper while viewfinder marks come up round the screen
-//      edge. A flock of side-view swallows darts in and tracking squares lock on.
+//      edge. A flock of distant bluebird silhouettes darts in and tracking squares lock on.
 //   2. The viewfinder closes onto a window, the shutter fires and the sky develops square by square;
 //      ornaments are drawn in the paper margins.
 //   3. The birds fly off and break into pixels. A strip of semiconductor equations, there only as
@@ -101,9 +101,9 @@
     portrait: { far: [1.9, -0.45, 0.0, 0.55, 0.8], tower: [1.15, -0.38, 0.5, 0.8, 0.9],
                 mid: [1.2, 0.25, 0.42, 0.9, 0.9], near: [2.4, -0.7, 1.65, 1.35, 0.95] },
   };
-  // The flock around the window's centre, after the swallow reference: a near row above a far
+  // The flock around the window's centre, using distant bluebird silhouettes: a near row above a far
   // row. [row (0 near, 1 far), x and y offset (window-size shares), size, wing pose (0 raised,
-  // 1 swept back), tilt in degrees (negative: nose up)]. Poses stay frozen: the camera holds the frame.
+  // 1 calm glide), tilt in degrees (negative: nose up)]. Poses stay frozen: the camera holds the frame.
   const FLOCK = [
     [0, -0.26, 0.02, 1.0, 0.15, -14], [0, -0.13, -0.04, 1.08, 0.55, -10], [0, 0.0, 0.0, 1.0, 0.1, -16],
     [0, 0.13, -0.07, 1.12, 0.7, -9], [0, 0.26, -0.03, 0.98, 0.3, -13],
@@ -141,9 +141,11 @@
   // (wingspan about 2, head towards -y) and a flight feather about 2 long (tip towards -y), its vane
   // narrower on the leading edge and notched where the barbs split.
   const BUTTERFLY = {
-    fore: 'M0.04 -0.18C0.3 -0.62 0.78 -0.8 0.98 -0.62C1.04 -0.4 0.95 -0.15 0.8 -0.05C0.55 0.02 0.25 0.02 0.06 -0.02Z',
-    hind: 'M0.06 0C0.35 0 0.72 0.1 0.74 0.32C0.74 0.55 0.52 0.78 0.3 0.8C0.18 0.8 0.08 0.55 0.04 0.3Z',
-    antenna: 'M-0.02 -0.44C-0.07 -0.6 -0.13 -0.72 -0.2 -0.82',
+    // A light swallowtail-like contour: broad forewing, gently scalloped hindwing and small tail.
+    fore: 'M0.04 -0.18C0.29 -0.65 0.77 -0.88 0.98 -0.67C1.11 -0.49 0.94 -0.19 0.73 -0.09C0.48 0.04 0.20 0.01 0.04 -0.02Z',
+    hind: 'M0.05 0.01C0.30 -0.03 0.66 0.13 0.75 0.37C0.79 0.51 0.67 0.67 0.54 0.70L0.60 0.94L0.43 0.74C0.19 0.70 0.06 0.42 0.05 0.01Z',
+    antenna: 'M-0.02 -0.44C-0.06 -0.64 -0.15 -0.76 -0.22 -0.81',
+    vein: 'M0.10 -0.11Q0.42 -0.43 0.84 -0.61M0.13 0.06Q0.45 0.33 0.62 0.48',
   };
   // The pinned specimen's wings are the Lorenz attractor (sigma 10, rho 28, beta 8/3), the butterfly
   // of the butterfly effect, seen along its two lobes: (x + y) / sqrt 2 across and z up (squashed to
@@ -151,16 +153,13 @@
   // it at z = 27. The orbit is followed for `span` time units in RK4 steps of `step` from `from`, a
   // point just under that middle where it crosses into a wing and then switches within a loop or two.
   const LORENZ = { from: [-1.332, 1.4, 24.525], span: 20, step: 0.005, wing: 12 };
+  // Two gently asymmetric feather silhouettes, with a curved quill and sparse down.
   const FEATHER = {
-    vane: 'M0 -1C0.1 -0.92 0.22 -0.72 0.25 -0.5L0.255 -0.39L0.11 -0.27L0.252 -0.33C0.262 -0.22 0.266 -0.08 0.258 0.05'
-      + 'L0.248 0.1L0.1 0.21L0.236 0.155C0.215 0.33 0.13 0.52 0.02 0.64L-0.03 0.62C-0.12 0.52 -0.165 0.37 -0.172 0.22'
-      + 'L-0.172 0.16L-0.07 0.215L-0.17 0.1C-0.176 -0.1 -0.172 -0.3 -0.162 -0.43L-0.157 -0.48L-0.06 -0.425L-0.15 -0.545'
-      + 'C-0.12 -0.76 -0.06 -0.93 0 -1Z',
-    shaft: 'M0.01 0.98C0.02 0.5 0.02 -0.3 0 -0.97',
-    down: 'M0.01 0.66C-0.06 0.7 -0.13 0.76 -0.17 0.86M0.01 0.7C0.07 0.74 0.12 0.8 0.15 0.9'
-      + 'M0.01 0.63C-0.09 0.63 -0.17 0.66 -0.23 0.72M0.01 0.68C0.1 0.68 0.17 0.72 0.22 0.79',
+    vane: 'M0 -1C0.12 -0.91 0.28 -0.67 0.26 -0.40C0.25 -0.19 0.24 0.10 0.16 0.31C0.10 0.47 0.03 0.58 -0.02 0.65C-0.16 0.51 -0.23 0.29 -0.20 0.08C-0.22 -0.15 -0.14 -0.51 -0.09 -0.74C-0.05 -0.89 -0.02 -0.96 0 -1Z',
+    shaft: 'M0.01 0.98C-0.02 0.48 0.10 -0.18 0 -0.97',
+    down: 'M-0.02 0.64Q-0.12 0.73 -0.19 0.81M-0.01 0.70Q0.08 0.78 0.13 0.85',
   };
-  const FEATHER_WIDTH = 1.4;   // the feathers are drawn this much wider than the shapes above
+  const FEATHER_WIDTH = 1.2;
   // A sakura petal about 2 long: the base towards +y, the notched tip towards -y.
   const PETAL = new Path2D('M0 1C-0.55 0.62 -0.74 -0.16 -0.42 -0.86L0 -0.62L0.42 -0.86C0.74 -0.16 0.55 0.62 0 1Z');
   const GUST_LEN = 700;   // the ring HELLO sends out as it breaks up, sweeping past the screen edges
@@ -246,7 +245,7 @@
     tracks: [[0.86, 'mid', 150, 352], [0.73, 'fine'], [0.6, 'dots'], [0.47, 'fine', 196, 468]], worlds: [2.2, 2.6, 1.8, 2.1],
     rim: [1.5, 5, 8.5], glints: { big: [236, 0.8, 23], small: [[[0, 70], 0.88, 10], [[280, 320], 0.68, 6]] },
     film: { band: 17, hole: [9, 6, 1.6], pitch: 15, inset: 4, top: 7, gap: 0.6 },
-    bird: { step: 8.5, off: 16, size: [8, 20], speed: 9 },
+    bird: { count: 14, mobile: 8, off: 16, size: [8, 20], speed: 7 },
     spin: { turn: [120, 80, 55, 40], up: 2000, pass: [1.6, 800], twinkle: { at: [4, 10.5, 18.5], every: 21.5, len: 600 } },
   };
   // How far in from the right-hand meter's line the section index stands on a wide screen, for the
@@ -444,20 +443,30 @@
 
   // ---------- birds ----------
 
-  // A swallow in profile, heading +x, in local units (about 1.5 long). Two key shapes share one
-  // outline: wings raised in an arc (pose 0) and wings swept back in a glide (pose 1).
-  // Points: beak, head (2 controls), nape, leading edge (2), wing tip, trailing edge (2), wing root,
-  // back (2), tail base top, upper tail tip, notch, lower tail tip, tail base bottom, belly (2),
-  // throat, chin (2).
-  const RAISED = [0.70, 0.00, 0.66, -0.10, 0.55, -0.14, 0.42, -0.10, 0.36, -0.62, 0.00, -0.98, -0.52, -0.95,
-    -0.22, -0.66, -0.02, -0.34, 0.04, -0.08, -0.04, -0.05, -0.14, -0.02, -0.22, 0.00,
-    -0.74, 0.24, -0.36, 0.13, -0.60, 0.42, -0.18, 0.11, -0.02, 0.20, 0.30, 0.18, 0.52, 0.09, 0.60, 0.07, 0.67, 0.04];
-  const SWEPT = [0.74, 0.00, 0.70, -0.09, 0.59, -0.12, 0.46, -0.09, 0.20, -0.24, -0.40, -0.36, -0.98, -0.30,
-    -0.56, -0.18, -0.14, -0.08, 0.06, -0.06, -0.04, -0.03, -0.14, -0.01, -0.22, 0.01,
-    -0.86, 0.10, -0.44, 0.13, -0.74, 0.28, -0.20, 0.10, -0.02, 0.18, 0.32, 0.16, 0.55, 0.08, 0.63, 0.06, 0.70, 0.03];
+  // Distant bluebirds inspired by Liz and the Blue Bird: silhouettes only.
+  // Two paths share the same 22-point topology: raised wings and a calm glide.
+  // There are no face, feather or beak details at this scale.
+  const RAISED = [
+    0.76, -0.02, 0.69, -0.12, 0.58, -0.17, 0.45, -0.12,
+    0.37, -0.46, 0.09, -0.80, -0.42, -0.84,
+    -0.23, -0.59, -0.06, -0.34, 0.06, -0.12,
+    -0.03, -0.08, -0.16, -0.07, -0.25, -0.07,
+    -0.79, 0.19, -0.73, 0.29, -0.29, 0.12, -0.20, 0.13,
+    -0.05, 0.22, 0.29, 0.17, 0.49, 0.09,
+    0.62, 0.06, 0.70, 0.03
+  ];
+  const GLIDE = [
+    0.76, -0.02, 0.69, -0.12, 0.58, -0.17, 0.45, -0.12,
+    0.18, -0.30, -0.13, -0.37, -0.65, -0.32,
+    -0.42, -0.21, -0.15, -0.12, 0.06, -0.09,
+    -0.03, -0.08, -0.16, -0.07, -0.25, -0.07,
+    -0.79, 0.19, -0.73, 0.29, -0.29, 0.12, -0.20, 0.13,
+    -0.05, 0.22, 0.29, 0.17, 0.49, 0.09,
+    0.62, 0.06, 0.70, 0.03
+  ];
 
-  function swallowPath(pose) {
-    const v = RAISED.map((a, i) => a + (SWEPT[i] - a) * pose);
+  function bluebirdPath(pose) {
+    const v = RAISED.map((a, i) => a + (GLIDE[i] - a) * clamp01(pose));
     const p = i => `${v[2 * i].toFixed(3)} ${v[2 * i + 1].toFixed(3)}`;
     return `M${p(0)}C${p(1)} ${p(2)} ${p(3)}C${p(4)} ${p(5)} ${p(6)}C${p(7)} ${p(8)} ${p(9)}C${p(10)} ${p(11)} ${p(12)}`
       + `L${p(13)}L${p(14)}L${p(15)}L${p(16)}C${p(17)} ${p(18)} ${p(19)}C${p(20)} ${p(21)} ${p(0)}Z`;
@@ -480,7 +489,7 @@
 
   // Draws one bird at screen (x, y), tilted by `tilt` degrees.
   function poseBird(bird, x, y, size, pose, tilt, opacity = 1) {
-    if (bird.drawn !== pose) { bird.body.setAttribute('d', swallowPath(pose)); bird.drawn = pose; }
+    if (bird.drawn !== pose) { bird.body.setAttribute('d', bluebirdPath(pose)); bird.drawn = pose; }
     bird.g.setAttribute('transform', `translate(${fixed(x)} ${fixed(y)}) rotate(${fixed(tilt)}) scale(${size.toFixed(2)})`);
     bird.g.style.opacity = opacity;
     show(bird.g, true);
@@ -569,8 +578,9 @@
       };
     });
     const body = makeBody(g);
+    const veins = wings.flatMap(w => [svg('path', { class: 'veins', d: BUTTERFLY.vein }, w.fore.parentNode)]);
     show(g, false);
-    return { g, wings, body, lines: wings.flatMap(w => [w.fore, w.hind]) };
+    return { g, wings, body, veins, lines: wings.flatMap(w => [w.fore, w.hind]) };
   }
 
   // The specimen's orbit (see LORENZ): its points two RK4 steps apart, in Lorenz units with y down
@@ -743,8 +753,8 @@
     // wings swept back a little differently
     const flocks = [svg('g', { class: 'birds', mask: 'url(#meetOffDark)' }, meetSvg), svg('g', { class: 'birds white', mask: 'url(#meetOnDark)' }, meetSvg)];
     flocks.forEach(g => cover(g, { class: 'extent' }));
-    const birds = Array.from({ length: Math.round(360 / MEET.bird.step) }, (_, i) => {
-      const d = swallowPath(0.6 + 0.3 * noise(91 + i));
+    const birds = Array.from({ length: MEET.bird.count }, (_, i) => {
+      const d = bluebirdPath(0.65 + 0.3 * noise(91 + i));
       return { els: flocks.map(g => svg('path', { d }, g)), seen: true };
     });
     return { thumbs, planes, gaps, moonBox, moonDark, hatch, rim, tracks, worlds, glints, rays, orbit, lune, points, moonG, moon, moonLit, bezel, herG, her, petals, af, barsG, bars, birds };
@@ -1149,7 +1159,7 @@
   // Where the butterflies and feathers sit. On a wide screen a butterfly over a feather in the left
   // margin (the pinned specimen is in the cluster below them) and a butterfly over two feathers in
   // the right one, under the upper cluster; on a phone a butterfly and a feather above the window
-  // and a butterfly and two feathers below it. Each goes its own calm way (butterflyAt, featherAt);
+  // and another butterfly and feather below it. Each goes its own calm way (butterflyAt, featherAt);
   // HELLO's first rings nudge the ones they pass over (on a phone they stay round the window and
   // miss most), and the ring it sends out as it breaks up blows them away.
   function layoutMotifs(L) {
@@ -1159,10 +1169,9 @@
     // butterflies: [x, y, the way they drift in degrees]; feathers: [x, y]
     const spots = portrait
       ? { butterflies: [[0.2 * W, 0.55 * win.y, 190], [0.6 * W, below + 0.55 * (H - below), -20]],
-          feathers: [[0.42 * W, 0.6 * win.y], [0.8 * W, below + 0.25 * (H - below)], [0.9 * W, below + 0.62 * (H - below)]] }
+          feathers: [[0.42 * W, 0.6 * win.y], [0.8 * W, below + 0.35 * (H - below)]] }
       : { butterflies: [[0.52 * win.x, win.y + 0.2 * win.h, -110], [right + 0.45 * (W - right), win.y + 0.47 * win.h, 75]],
-          feathers: [[0.42 * win.x, win.y + 0.56 * win.h], [right + 0.3 * (W - right), win.y + 0.7 * win.h],
-            [right + 0.66 * (W - right), win.y + 0.86 * win.h]] };
+          feathers: [[0.42 * win.x, win.y + 0.56 * win.h], [right + 0.52 * (W - right), win.y + 0.72 * win.h]] };
     // the specimen about two cluster units across (u px to a Lorenz unit), its fixed points a little
     // over the cluster's middle (at y mid) and its body (bodyK across a unit) on them
     const [cx, cy, a] = L.clusters[0], mid = cy - 0.1 * a;
@@ -1187,7 +1196,7 @@
     M.feathers = spots.feathers.map(([x, y], i) => {
       const drawn = BEAT.hello + 120 + 110 * i;
       const f = {
-        x, y, tilt: [-22, 28, -12][i], phase: [0.3, 2.2, 4.1][i], spin: i % 2 ? 1 : -1, drawn, alive: drawn + 360,
+        x, y, tilt: [-22, 28][i], phase: [0.3, 2.2][i], spin: i % 2 ? 1 : -1, drawn, alive: drawn + 360,
         swing: 0.6 * M.quill, dip: 0.12 * M.quill, fall: 0.035 * H,
       };
       f.rings = ringPasses(L, t => featherAt(f, t));
@@ -1204,7 +1213,8 @@
     hairline([s.path], 0.5, specimen.u);
     hairline(s.body.slice(0, 2), 0.9, specimen.bodyK);
     for (const b of motifs.butterflies) {
-      hairline(b.lines, 0.9, M.fly);
+      hairline(b.lines, 0.85, M.fly);
+      hairline(b.veins, 0.6, M.fly);
       hairline(b.body.slice(0, 2), 1, M.fly);
     }
     for (const f of motifs.feathers) {
@@ -1742,7 +1752,10 @@
       if (t < BEAT.snap + bird.delay) { hideBird(bird); continue; }
       const { x, y } = birdPos(bird, t);
       const gone = seg(t, bird.leave + 260, 160);
-      if (gone < 1) poseBird(bird, x, y, bird.size, bird.pose, bird.tilt, 1 - gone);
+      const enter = ease.out(seg(t, BEAT.snap + bird.delay, BEAT.snapLen));
+      const exit = ease.inOut(seg(t, bird.leave, 460));
+      const pose = lerp(lerp(0.2, bird.pose, enter), 0.15, exit);
+      if (gone < 1) poseBird(bird, x, y, bird.size, pose, bird.tilt, 1 - gone);
       else show(bird.g, false);
       // a speed streak trails each bird while it darts in or away
       const prev = birdPos(bird, t - 45);
@@ -2020,6 +2033,7 @@
     if (t < b.drawn) { show(node.g, false); return; }
     drawIn(node.lines, t, b.drawn, 240);
     node.body.forEach(el => { el.style.opacity = ease.out(seg(t, b.drawn + 120, 160)).toFixed(3); });
+    node.veins.forEach(el => { el.style.opacity = (0.38 * ease.out(seg(t, b.drawn + 150, 200))).toFixed(3); });
     // HELLO's first rings nudge it (about 10 px); the last one carries it off, and it turns to run
     // before the wind, its wings beating
     const at = butterflyAt(b, t), n = nudged(t, b.rings), { since, push } = blown(t, b.blow.at);
@@ -2387,12 +2401,12 @@
   // and growing to its size) as the orbit is drawn past it, the last just as it closes. Those behind
   // the picture are not drawn (it would hide them), nor those off the screen.
   function drawBirds(G, T) {
-    const B = MEET.bird, birds = meetMarks.birds, n = birds.length, rise = 12 * DEG;
+    const B = MEET.bird, birds = meetMarks.birds, n = state.layout.portrait ? B.mobile : B.count, rise = 12 * DEG;
     const drawn = 2 * Math.PI * ease.out(seg(T, 0.1, 0.45)), turned = B.speed * DEG * meet.lap;
     birds.forEach((bird, i) => {
       const at = 4 * DEG + 2 * Math.PI * i / n, up = clamp01((drawn - at * (1 - rise / (2 * Math.PI))) / rise);
       const a = G.from + at + turned, r = G.R + B.off + G.swerve(a), x = G.cx + r * Math.cos(a), y = G.cy + r * Math.sin(a);
-      const seen = up > 0 && x > -24 && x < G.squares - 8 && y > -24 && y < G.H + 24 && !(x > G.px + 10 && x < G.pr - 10);
+      const seen = i < n && up > 0 && x > -24 && x < G.squares - 8 && y > -24 && y < G.H + 24 && !(x > G.px + 10 && x < G.pr - 10);
       if (seen !== bird.seen) {
         bird.seen = seen;
         for (const el of bird.els) show(el, seen);
@@ -2400,9 +2414,12 @@
       if (!seen) return;
       // heading along their way, which bends where they swerve
       const b = a + 0.01, rb = G.R + B.off + G.swerve(b);
-      const heading = Math.atan2(G.cy + rb * Math.sin(b) - y, G.cx + rb * Math.cos(b) - x) / DEG;
+      const dx = G.cx + rb * Math.cos(b) - x, dy = G.cy + rb * Math.sin(b) - y;
+      const left = dx < 0;
+      // Small side-view silhouettes must never turn upside down as they orbit.
+      const pitch = Math.max(-18, Math.min(18, Math.atan2(dy, Math.abs(dx)) / DEG));
       const size = lerp(B.size[0], B.size[1], (1 + Math.sin(a)) / 2) * (0.6 + 0.4 * up);
-      const transform = `translate(${fixed(x)} ${fixed(y)}) rotate(${fixed(heading)}) scale(${size.toFixed(2)})`;
+      const transform = `translate(${fixed(x)} ${fixed(y)}) rotate(${fixed(left ? -pitch : pitch)}) scale(${(left ? -size : size).toFixed(2)} ${size.toFixed(2)})`;
       const opacity = up < 1 ? up.toFixed(3) : '';
       for (const el of bird.els) {
         el.setAttribute('transform', transform);

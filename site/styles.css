@@ -115,6 +115,7 @@ html.pointer-drawn .ruler::-moz-range-thumb { cursor: none !important; }
 .guides .wing { fill: var(--accent); stroke: var(--accent); stroke-dasharray: 1; fill-opacity: 0; }
 .guides .wing.hind, .guides .pale .wing.fore { fill: #59bff7; }
 .guides .pale .wing.hind { fill: var(--accent); }
+.guides .veins { fill: none; stroke: #c4eaff; stroke-linecap: round; }
 .guides .body { fill: #1871c2; stroke: none; }
 .guides .antenna, .guides .shaft { stroke: #1871c2; stroke-linecap: round; }
 .guides .vane { fill: url(#vane); stroke: var(--accent); stroke-dasharray: 1; fill-opacity: 0; }
@@ -287,7 +288,7 @@ html.pointer-drawn .ruler::-moz-range-thumb { cursor: none !important; }
 .tiles i { position: absolute; display: block; background: var(--paper); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ink) 16%, transparent); }
 .window-flash { position: absolute; inset: 0; background: #fff; opacity: 0; pointer-events: none; }
 
-/* The flock (side-view swallows), its speed streaks and pixels, and the tracking marks. */
+/* The flock (distant bluebird silhouettes), its speed streaks, pixels and tracking marks. */
 .flock { position: absolute; inset: 0; z-index: 4; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
 .flock .bird { fill: var(--accent); }
 .flock .bird.far { fill: #4aa9e6; }

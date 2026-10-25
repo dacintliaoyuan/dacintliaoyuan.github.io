@@ -1157,7 +1157,7 @@
   }
 
   // Where the butterflies and feathers sit. On a wide screen a butterfly over a feather in the left
-  // margin (the pinned specimen is in the cluster below them) and a butterfly over two feathers in
+  // margin (the pinned specimen is in the cluster below them) and a butterfly over a feather in
   // the right one, under the upper cluster; on a phone a butterfly and a feather above the window
   // and another butterfly and feather below it. Each goes its own calm way (butterflyAt, featherAt);
   // HELLO's first rings nudge the ones they pass over (on a phone they stay round the window and

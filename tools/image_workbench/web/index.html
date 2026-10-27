@@ -11,8 +11,8 @@
   <div class="brand">
     <span class="brand-mark" aria-hidden="true"></span>
     <div>
-      <h1>图片工作台</h1>
-      <p>IMAGE WORKBENCH · 本机 · 原图不移动</p>
+      <h1>素材工作台</h1>
+      <p>IMAGE &amp; CREATIVE WORKBENCH · 本机 · 原图不移动</p>
     </div>
   </div>
   <div class="top-right">
@@ -21,118 +21,162 @@
   </div>
 </header>
 
-<nav class="tabs" role="tablist" aria-label="工作台标签">
-  <button type="button" role="tab" data-tab="deliver" aria-selected="true">投递<span data-count="deliver"></span></button>
-  <button type="button" role="tab" data-tab="pending" aria-selected="false">待处理<span data-count="pending"></span></button>
-  <button type="button" role="tab" data-tab="ai" aria-selected="false">AI 任务<span data-count="ai"></span></button>
-  <button type="button" role="tab" data-tab="processed" aria-selected="false">已处理<span data-count="processed"></span></button>
-  <button type="button" role="tab" data-tab="drafts" aria-selected="false">草稿预览<span data-count="drafts"></span></button>
-  <button type="button" role="tab" data-tab="enabled" aria-selected="false">已启用<span data-count="enabled"></span></button>
+<nav class="zones" aria-label="工作台分区">
+  <button type="button" class="zone-button" data-zone="library" aria-pressed="true">图库处理</button>
+  <button type="button" class="zone-button" data-zone="creative" aria-pressed="false">绘画 / 鼠标图样</button>
 </nav>
 
-<main>
-  <section id="panel-deliver" class="panel" role="tabpanel" aria-label="投递">
-    <div class="drop" id="drop">
-      <input id="files" type="file" accept="image/*" multiple hidden>
-      <div class="drop-frame" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
-      <p class="drop-title">把选好的图片拖进来</p>
-      <p class="drop-note">也可以放进接收文件夹，工具会自己发现；原图只复制，不移动、不删除。</p>
-      <button type="button" class="primary" id="pick">选择图片</button>
-      <p class="drop-status" id="drop-status" role="status"></p>
-    </div>
-    <form class="settings" id="batch-settings">
-      <h2>批次设置</h2>
-      <p class="hint">同一批图片共用这些设置；在“待处理”里可以单张覆盖。</p>
-      <label>降噪 <input type="range" name="denoise" min="0" max="1" step="0.05" value="0.35"><output>35%</output></label>
-      <label>调色 <input type="range" name="color" min="0" max="1" step="0.05" value="0.4"><output>40%</output></label>
-      <label>放大
-        <select name="upscale">
-          <option value="auto">尺寸不足时本机放大</option>
-          <option value="never">不放大</option>
-        </select>
-      </label>
-      <label>去字
-        <select name="removeText">
-          <option value="auto">需要时生成 AI 任务</option>
-          <option value="never">不去字</option>
-        </select>
-      </label>
-      <label class="check"><input type="checkbox" name="trimBorders" checked> 去除扫描白边、截图边框</label>
-      <label class="check"><input type="checkbox" name="preserveSignature" checked> 保留画师签名</label>
-      <div class="actions">
-        <button type="button" class="primary" id="start-delivered">开始处理新投递</button>
-        <button type="button" id="scan-inbox">扫描接收文件夹</button>
+<div id="zone-library" class="zone">
+  <nav class="tabs" role="tablist" aria-label="图库标签">
+    <button type="button" role="tab" data-tab="deliver" aria-selected="true">投递<span data-count="deliver"></span></button>
+    <button type="button" role="tab" data-tab="pending" aria-selected="false">待处理<span data-count="pending"></span></button>
+    <button type="button" role="tab" data-tab="ai" aria-selected="false">AI 任务<span data-count="ai"></span></button>
+    <button type="button" role="tab" data-tab="processed" aria-selected="false">已处理<span data-count="processed"></span></button>
+    <button type="button" role="tab" data-tab="drafts" aria-selected="false">草稿预览<span data-count="drafts"></span></button>
+    <button type="button" role="tab" data-tab="enabled" aria-selected="false">已启用<span data-count="enabled"></span></button>
+  </nav>
+
+  <main>
+    <section id="panel-deliver" class="panel" role="tabpanel" aria-label="投递">
+      <div class="drop" id="drop">
+        <input id="files" type="file" accept="image/*" multiple hidden>
+        <div class="drop-frame" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+        <p class="drop-title">把选好的图片拖进来</p>
+        <p class="drop-note">也可以放进接收文件夹，工具会自己发现；原图只复制，不移动、不删除。</p>
+        <button type="button" class="primary" id="pick">选择图片</button>
+        <p class="drop-status" id="drop-status" role="status"></p>
       </div>
-      <p class="drop-status" id="inbox-status" role="status"></p>
-    </form>
-    <div class="list" id="delivered-list"></div>
-  </section>
+      <form class="settings" id="batch-settings">
+        <h2>批次设置</h2>
+        <p class="hint">同一批图片共用这些设置；在“待处理”里可以单张覆盖。</p>
+        <label>降噪 <input type="range" name="denoise" min="0" max="1" step="0.05" value="0.35"><output>35%</output></label>
+        <label>调色 <input type="range" name="color" min="0" max="1" step="0.05" value="0.4"><output>40%</output></label>
+        <label>放大
+          <select name="upscale">
+            <option value="auto">尺寸不足时本机放大</option>
+            <option value="never">不放大</option>
+          </select>
+        </label>
+        <label>去字
+          <select name="removeText">
+            <option value="auto">需要时生成 AI 任务</option>
+            <option value="never">不去字</option>
+          </select>
+        </label>
+        <label class="check"><input type="checkbox" name="trimBorders" checked> 去除扫描白边、截图边框</label>
+        <label class="check"><input type="checkbox" name="preserveSignature" checked> 保留画师签名</label>
+        <div class="actions">
+          <button type="button" class="primary" id="start-delivered">开始处理新投递</button>
+          <button type="button" id="scan-inbox">扫描接收文件夹</button>
+        </div>
+        <p class="drop-status" id="inbox-status" role="status"></p>
+      </form>
+      <div class="list" id="delivered-list"></div>
+    </section>
 
-  <section id="panel-pending" class="panel" hidden role="tabpanel" aria-label="待处理">
-    <div class="bar">
-      <p class="hint">先看分析和预览，再点开始。低置信度去字会先问你；单张失败不影响同批其他图。</p>
-      <div class="actions">
-        <button type="button" class="primary" id="start-all">开始选中</button>
-        <button type="button" id="refresh">刷新状态</button>
+    <section id="panel-pending" class="panel" hidden role="tabpanel" aria-label="待处理">
+      <div class="bar">
+        <p class="hint">先看分析和预览，再点开始。低置信度去字会先问你；单张失败不影响同批其他图。</p>
+        <div class="actions">
+          <button type="button" class="primary" id="start-all">开始选中</button>
+          <button type="button" id="refresh">刷新状态</button>
+        </div>
       </div>
-    </div>
-    <div class="list" id="pending-list"></div>
-  </section>
+      <div class="list" id="pending-list"></div>
+    </section>
 
-  <section id="panel-ai" class="panel" hidden role="tabpanel" aria-label="AI 任务">
-    <div class="bar">
-      <p class="hint">复制指令给能访问本仓库的 AI；它把结果写进任务目录后，点“刷新检查”即可接入。网页不调用 API。</p>
-      <button type="button" class="primary" id="scan-ai">刷新检查</button>
-    </div>
-    <div class="list" id="ai-list"></div>
-  </section>
-
-  <section id="panel-processed" class="panel panel-work" hidden role="tabpanel" aria-label="已处理">
-    <div class="bar compact">
-      <p class="hint">大图审核：选择左侧图片，切换并排、滑动或单图；可放大到 100% 检查局部。采用不等于入库。</p>
-      <div class="actions">
-        <button type="button" class="primary" id="create-draft">加入草稿</button>
-        <label class="check"><input type="checkbox" id="only-unadopted"> 只看未采用</label>
+    <section id="panel-ai" class="panel" hidden role="tabpanel" aria-label="AI 任务">
+      <div class="bar">
+        <p class="hint">复制指令给能访问本仓库的 AI；它把结果写进任务目录后，点“刷新检查”即可接入。网页不调用 API。</p>
+        <button type="button" class="primary" id="scan-ai">刷新检查</button>
       </div>
-    </div>
-    <div class="review" id="processed-review">
-      <aside class="review-side" aria-label="已处理图片列表">
-        <div class="review-side-head"><span>已处理</span><span class="id" id="processed-count"></span></div>
-        <div class="review-list" id="processed-list"></div>
-      </aside>
-      <section class="viewer" id="processed-viewer" aria-label="大图审核"></section>
-    </div>
-  </section>
+      <div class="list" id="ai-list"></div>
+    </section>
 
-  <section id="panel-drafts" class="panel panel-work" hidden role="tabpanel" aria-label="草稿预览">
-    <div class="bar compact">
-      <p class="hint">草稿不改正式主页。先在左侧选择一份草稿，只加载当前活动预览；历史迁移核对收在折叠分组里。</p>
-      <div class="actions">
-        <a class="tag" href="http://127.0.0.1:8766/" target="_blank" rel="noopener">打开 8766 主页 ↗</a>
+    <section id="panel-processed" class="panel panel-work" hidden role="tabpanel" aria-label="已处理">
+      <div class="bar compact">
+        <p class="hint">大图审核：选择左侧图片，切换并排、滑动或单图；可放大到 100% 检查局部。采用不等于入库。</p>
+        <div class="actions">
+          <button type="button" class="primary" id="create-draft">加入草稿</button>
+          <label class="check"><input type="checkbox" id="only-unadopted"> 只看未采用</label>
+        </div>
       </div>
-    </div>
-    <div class="drafts-layout" id="drafts-layout">
-      <aside class="draft-side" aria-label="草稿列表">
-        <div class="review-side-head"><span>待审核草稿</span><span class="id" id="drafts-count"></span></div>
-        <div class="draft-list" id="drafts-list"></div>
-        <details class="history-drafts" id="draft-history" data-key="draft-history">
-          <summary>历史迁移核对 <span class="id" id="draft-history-count"></span></summary>
-          <div class="draft-list" id="drafts-history-list"></div>
-        </details>
-      </aside>
-      <section class="draft-preview" id="draft-preview" aria-label="活动草稿预览"></section>
-    </div>
-  </section>
+      <div class="review" id="processed-review">
+        <aside class="review-side" aria-label="已处理图片列表">
+          <div class="review-side-head"><span>已处理</span><span class="id" id="processed-count"></span></div>
+          <div class="review-list" id="processed-list"></div>
+        </aside>
+        <section class="viewer" id="processed-viewer" aria-label="大图审核"></section>
+      </div>
+    </section>
 
-  <section id="panel-enabled" class="panel" hidden role="tabpanel" aria-label="已启用">
-    <div class="bar">
-      <p class="hint">这里只读。正式主页仍是 <a class="link" href="http://127.0.0.1:8766/" target="_blank" rel="noopener">127.0.0.1:8766</a>。</p>
+    <section id="panel-drafts" class="panel panel-work" hidden role="tabpanel" aria-label="草稿预览">
+      <div class="bar compact">
+        <p class="hint">草稿不改正式主页。先在左侧选择一份草稿，只加载当前活动预览；历史迁移核对收在折叠分组里。</p>
+        <div class="actions">
+          <a class="tag" href="http://127.0.0.1:8766/" target="_blank" rel="noopener">打开 8766 主页 ↗</a>
+        </div>
+      </div>
+      <div class="drafts-layout" id="drafts-layout">
+        <aside class="draft-side" aria-label="草稿列表">
+          <div class="review-side-head"><span>待审核草稿</span><span class="id" id="drafts-count"></span></div>
+          <div class="draft-list" id="drafts-list"></div>
+          <details class="history-drafts" id="draft-history" data-key="draft-history">
+            <summary>历史迁移核对 <span class="id" id="draft-history-count"></span></summary>
+            <div class="draft-list" id="drafts-history-list"></div>
+          </details>
+        </aside>
+        <section class="draft-preview" id="draft-preview" aria-label="活动草稿预览"></section>
+      </div>
+    </section>
+
+    <section id="panel-enabled" class="panel" hidden role="tabpanel" aria-label="已启用">
+      <div class="bar">
+        <p class="hint">这里只读。正式主页仍是 <a class="link" href="http://127.0.0.1:8766/" target="_blank" rel="noopener">127.0.0.1:8766</a>。</p>
+      </div>
+      <div class="grid" id="enabled-list"></div>
+    </section>
+  </main>
+</div>
+
+<div id="zone-creative" class="zone" hidden>
+  <div class="bar compact creative-bar">
+    <p class="hint">绘画／鼠标图样：参考调查 → 用户确认 → GPT Image 任务包 → 回传校验 → 手改往返 → 隔离预览。网页不调用 API，也不模拟生成进度。</p>
+    <div class="actions">
+      <button type="button" data-ca-action="refresh">刷新制作区</button>
+      <a class="tag" href="http://127.0.0.1:8766/" target="_blank" rel="noopener">打开 8766 主页 ↗</a>
     </div>
-    <div class="grid" id="enabled-list"></div>
-  </section>
-</main>
+  </div>
+  <p class="drop-status creative-status" id="creative-status" role="status" aria-live="polite"></p>
+  <div class="creative-layout">
+    <aside class="creative-side" aria-label="制作项目">
+      <div class="review-side-head"><span>制作项目</span><span class="id" id="creative-count"></span></div>
+      <div class="creative-list" id="creative-list"></div>
+      <form class="settings creative-form" id="creative-create">
+        <h2>新建项目</h2>
+        <label>名称 <input name="name" required maxlength="80" placeholder="鼠标像素双人"></label>
+        <label>对象
+          <select name="objectKind">
+            <option value="pointer">鼠标图样</option>
+            <option value="feather">羽毛</option>
+            <option value="bird">青鸟</option>
+            <option value="star">星星／星芒</option>
+            <option value="other">其他</option>
+          </select>
+        </label>
+        <label>用途与范围 <textarea name="purpose" rows="3" placeholder="用在哪里、保留什么、允许改哪里"></textarea></label>
+        <div class="actions"><button type="submit" class="primary">建立项目</button></div>
+        <p class="drop-status" id="creative-create-status" role="status"></p>
+      </form>
+    </aside>
+    <section class="creative-detail" id="creative-detail" aria-label="制作项目详情">
+      <p class="hint">在左侧选择或新建一个项目。</p>
+    </section>
+  </div>
+</div>
 
 <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
 <script src="/app.js"></script>
+<script src="/creative.js"></script>
 </body>
 </html>

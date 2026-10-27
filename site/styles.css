@@ -116,9 +116,16 @@ html.pointer-drawn .ruler::-moz-range-thumb { cursor: none !important; }
 .guides .wing.hind, .guides .pale .wing.fore { fill: #59bff7; }
 .guides .pale .wing.hind { fill: var(--accent); }
 .guides .body { fill: #1871c2; stroke: none; }
-.guides .antenna, .guides .shaft { stroke: #1871c2; stroke-linecap: round; }
-.guides .vane { fill: url(#vane); stroke: var(--accent); stroke-dasharray: 1; fill-opacity: 0; }
-.guides .down { stroke: #59bff7; stroke-linecap: round; }
+.guides .antenna { stroke: #1871c2; stroke-linecap: round; }
+/* The feather leaves structural lines before colour. Five brush passes reveal a temporary wash;
+   the accepted texture joins it as the sparse barbs are inked. Everything stays in unit space. */
+.guides .feather-pen, .guides .feather-brush { fill: none; stroke: #fff; stroke-linecap: round; stroke-dasharray: 1; }
+.guides .feather-pen { stroke-width: 0.085; }
+.guides .feather-clip { fill: #fff; stroke: none; }
+.guides .feather-line { fill: none; stroke: var(--accent); stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 1; }
+.guides .feather-detail .feather-line { stroke: #1871c2; }
+.guides .feather-wash { opacity: var(--feather-wash, 0); }
+.guides .feather-texture { opacity: var(--feather-photo, 1); }
 /* the pinned specimen: the Lorenz attractor's orbit as its wings (0.5px, finer than a hairline so
    its loops stay apart), the small square that traces it, crosses on its two fixed points, a
    dimension line and a pin */
@@ -492,7 +499,7 @@ html.pointer-drawn .ruler::-moz-range-thumb { cursor: none !important; }
 .index a:not(.active):hover b { background: color-mix(in srgb, var(--idx) 20%, transparent); }
 /* Focus brackets (here and round the chosen picture and time of day in the settings): a rounded frame
    shown only at its four corners, so each bracket bends round its corner. */
-.index .brackets, .pick[aria-pressed="true"]::after, .time[aria-pressed="true"]::after {
+.index .brackets, .pick[aria-pressed="true"]::after, .time[aria-pressed="true"]::after, .lang-switch [aria-pressed="true"]::after {
   -webkit-mask:
     linear-gradient(#000 0 0) left top / var(--l) var(--l), linear-gradient(#000 0 0) right top / var(--l) var(--l),
     linear-gradient(#000 0 0) left bottom / var(--l) var(--l), linear-gradient(#000 0 0) right bottom / var(--l) var(--l);
@@ -512,6 +519,11 @@ html.pointer-drawn .ruler::-moz-range-thumb { cursor: none !important; }
 .index .brackets.lock { animation: index-lock 0.45s cubic-bezier(0.2, 0.9, 0.3, 1.2) both; }
 @keyframes index-lock {
   from { opacity: 0; transform: translate(calc(var(--x, 0px) - var(--o)), calc(var(--y, 0px) - var(--o))) scale(1.7); }
+}
+/* swiped onto a square, the brackets have come along the index with the finger: they only tighten a little */
+.index .brackets.snap { animation: index-snap 0.3s cubic-bezier(0.2, 0.9, 0.3, 1.2) both; }
+@keyframes index-snap {
+  from { transform: translate(calc(var(--x, 0px) - var(--o)), calc(var(--y, 0px) - var(--o))) scale(1.3); }
 }
 .playing .index { pointer-events: none; }
 /* (a title hangs under its square, so the squares are evenly spaced however long the titles; the
@@ -579,6 +591,16 @@ html.pointer-drawn .ruler::-moz-range-thumb { cursor: none !important; }
 .panel.open { opacity: 1; pointer-events: auto; }
 .panel.over { --pen: #fff; --over: 1; scrollbar-color: rgba(255, 255, 255, 0.35) transparent; }
 .portrait .panel { padding: 14px 20px 48px; }
+/* A finger going across is the page's own (a swipe steps along the index, main.js: the row of pages);
+   the browser keeps to scrolling down and pinching, and zoomed in it pans as it would (.zoomed). While
+   the row is out of place the panel takes no taps, nothing in it scrolls across and the browser's
+   scrollbar does not flash up as a page coming in makes it longer (.swiping); on the opening screen it
+   shows the section coming in (.peek). */
+.stage, .panel, .picks { touch-action: pan-y pinch-zoom; }
+.stage.zoomed, .stage.zoomed .panel, .stage.zoomed .picks { touch-action: auto; }
+.panel.swiping { overflow-x: hidden; pointer-events: none; scrollbar-width: none; }
+.panel.swiping::-webkit-scrollbar { display: none; }
+.panel.peek { opacity: 1; }
 /* The frosted block: over the picture folded away, the picture behind the section's text is blurred
    and shaded (in the picture's own deep colour, --tone), with the white lettering. How strongly is
    the visitor's (--glass, 0 to 1, in the settings; main.js sets it): the usual 0.5 is a 16px blur
@@ -603,6 +625,39 @@ html.pointer-drawn .ruler::-moz-range-thumb { cursor: none !important; }
 .sk { display: block; width: var(--w); height: 9px; margin: 11px 0; border-radius: 2px; background: color-mix(in srgb, var(--pen) calc(12% + 12% * var(--over)), transparent); transform-origin: left center; }
 .sk.head { height: 14px; background: color-mix(in srgb, var(--pen) calc(24% + 18% * var(--over)), transparent); }
 .about-text { max-width: 560px; }
+/* ABOUT: the title with the 中 / EN switch at the column's right (there where both languages are
+   written), and the words, a paragraph to a block; bold, and links underlined in the blue bird's
+   blue (white over the picture) */
+.pane-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.about-text p { margin: 0 0 1.1em; font-size: 16px; line-height: 1.9; }
+.about-text p:last-child { margin-bottom: 0; }
+.about-text strong { font-weight: 700; }
+.about-text a {
+  color: var(--accent); text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 0.25em;
+  cursor: var(--cursor-click); --pointer: click; -webkit-tap-highlight-color: transparent;
+}
+.about-text a:active { cursor: var(--cursor-press); --pointer: press; }
+.about-text a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 2px; }
+.panel.over .about-text a { color: inherit; }
+/* the switch: two small squares in the index's hand, the language shown filled with the blue bird's
+   blue and locked by the focus brackets, the other in a fine line of the pen */
+.lang-switch { display: flex; flex: none; gap: 10px; -webkit-user-select: none; user-select: none; }
+.lang-switch button {
+  position: relative; display: grid; place-items: center; width: 32px; aspect-ratio: 1; margin: 0; padding: 0;
+  border: 1.5px solid var(--pen); border-radius: 7px; background: none; color: var(--pen);
+  font: 600 12px / 1 Inter, system-ui, sans-serif; letter-spacing: 0.04em; text-shadow: inherit;
+  cursor: var(--cursor-click); --pointer: click; transition: background-color 0.3s, border-color 0.3s, color 0.3s;
+  -webkit-tap-highlight-color: transparent;
+}
+.lang-switch button:active { cursor: var(--cursor-press); --pointer: press; }
+.lang-switch button:focus-visible { outline: 2px solid var(--accent); outline-offset: 7px; }
+@media (hover: hover) { .lang-switch button:not([aria-pressed="true"]):hover { background: color-mix(in srgb, var(--pen) 20%, transparent); } }
+.lang-switch [aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: #fff; cursor: var(--cursor); --pointer: rest; }
+.lang-switch [aria-pressed="true"]::after {
+  --l: 10px;
+  content: ""; position: absolute; inset: -6px; pointer-events: none;
+  border: 2px solid var(--pen); border-radius: 10px;
+}
 /* projects: specimen plates, two to a row; a picture's place is a pale blue outline over 48-degree
    blinds on a lighter patch of the paper (only just lighter on the night paper) with a centre cross
    and two heavy corners, over a dimension line (on the picture: a white outline over faint white
@@ -860,6 +915,23 @@ a.reach:active, button.reach:active { cursor: var(--cursor-press); --pointer: pr
 :is(.plate, .contact li):nth-child(3) { animation-delay: 0.16s; }
 :is(.plate, .contact li):nth-child(4) { animation-delay: 0.24s; }
 .set-part { animation: pane-rise 0.45s ease-out both; }
+/* ABOUT: the switch comes in as the rules finish drawing, its brackets locking on; the paragraphs
+   rise one after another. A language picked swaps the words (main.js): the old ones lift as they
+   fade, the new ones rise into their place, and the brackets lock on the new square at once. */
+.lang-switch { animation: pane-fade 0.3s 0.5s both; }
+.lang-switch [aria-pressed="true"]::after { animation: lang-lock 0.45s 0.55s cubic-bezier(0.2, 0.9, 0.3, 1.2) both; }
+.lang-switch.switched [aria-pressed="true"]::after { animation-delay: 0s; }
+.about-lang p { animation: pane-rise 0.45s 0.2s ease-out both; }
+.about-lang p:nth-child(2) { animation-delay: 0.28s; }
+.about-lang p:nth-child(3) { animation-delay: 0.36s; }
+.about-lang p:nth-child(4) { animation-delay: 0.44s; }
+.about-lang p:nth-child(n + 5) { animation-delay: 0.52s; }
+.about-text.swapped p { animation: none; }
+.about-lang.leaving { animation: about-out 0.15s ease-in both; }
+.about-lang.entering { animation: about-in 0.25s ease-out both; }
+@keyframes lang-lock { from { opacity: 0; transform: scale(1.7); } }
+@keyframes about-out { to { opacity: 0; transform: translateY(-4px); } }
+@keyframes about-in { from { opacity: 0; transform: translateY(6px); } }
 .set-bg { animation-delay: 0.08s; }
 .set-keys { animation-delay: 0.16s; }
 @keyframes pane-grow { from { opacity: 0; transform: translateY(10px) scale(0.85); } }
@@ -871,5 +943,7 @@ a.reach:active, button.reach:active { cursor: var(--cursor-press); --pointer: pr
 
 /* (a key pressed still lights up on the settings' keyboard: it does not move) */
 @media (prefers-reduced-motion: reduce) {
-  .idle .scene-breath, .pane *:not(.k), .index .brackets.lock { animation: none !important; }
+  .idle .scene-breath, .pane *:not(.k), .index .brackets.lock, .index .brackets.snap { animation: none !important; }
 }
+
+/* (The opening's loading shell is styled in index.html's critical style, all of it: boot.js.) */

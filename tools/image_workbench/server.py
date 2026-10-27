@@ -10,6 +10,7 @@ import json
 import mimetypes
 import os
 import queue
+import re
 import threading
 import time
 import urllib.parse
@@ -31,12 +32,22 @@ CONTENT_TYPES = {
     ".ico": "image/x-icon", ".md": "text/markdown; charset=utf-8",
 }
 SETTINGS_KEYS = {"denoise", "color", "upscale", "removeText", "trimBorders", "preserveSignature"}
+CREATIVE_PREVIEW_ID = re.compile(r"^pv-[0-9a-f]{8}$")
 
 
 class ConfirmationRequired(Exception):
     def __init__(self, plans):
         super().__init__("有低置信度任务需要用户确认")
         self.plans = plans
+
+
+class CreativeUnavailable(Exception):
+    """The creative workbench is off or could not be loaded; the gallery is unaffected."""
+
+    def __init__(self, message, detail=None):
+        super().__init__(message)
+        self.status = 503
+        self.detail = detail
 
 
 def _alive(pid):
@@ -103,10 +114,17 @@ def normalize_settings(value, base=None):
 
 
 class Workbench:
-    def __init__(self, root=None, library_path=None, site=None):
+    def __init__(self, root=None, library_path=None, site=None,
+                 creative_root=None, enable_creative=True):
         self.root = Path(root or state_module.ROOT).resolve()
         self.library = Path(library_path or self.root / ".local" / "output" / "homepage-images").resolve()
         self.site = Path(site or self.root / "site").resolve()
+        self.creative_root = Path(
+            creative_root or self.root / ".local" / "output" / "creative-assets").resolve()
+        self.creative_enabled = bool(enable_creative)
+        self.creative_service = None
+        self.creative_error = None
+        self._creative_lock = threading.RLock()
         self.library.mkdir(parents=True, exist_ok=True)
         self.store = state_module.StateStore(self.library)
         self.queue = queue.Queue()
@@ -118,6 +136,24 @@ class Workbench:
         self._worker = threading.Thread(target=self._work, daemon=True)
         self._watcher = threading.Thread(target=self._watch, daemon=True)
 
+    def creative(self):
+        """The creative workbench, loaded on first use; never created at startup."""
+        with self._creative_lock:
+            if not self.creative_enabled:
+                raise CreativeUnavailable("制作区已关闭（--no-creative）")
+            if self.creative_error:
+                raise CreativeUnavailable("制作区不可用", self.creative_error)
+            if self.creative_service is None:
+                try:
+                    from creative_workbench.api import CreativeApi
+                    service = CreativeApi(self.creative_root, self.site, self.root)
+                    service.ensure_recovered()
+                except Exception as error:
+                    self.creative_error = str(error)
+                    raise CreativeUnavailable("制作区不可用", str(error)) from error
+                self.creative_service = service
+            return self.creative_service
+
     def start(self):
         self._acquire_lock()
         recovered = self.store.mutate(lambda state: state_module.recover_interrupted(state))
@@ -128,6 +164,12 @@ class Workbench:
         self.refresh_ai()
         self._worker.start()
         self._watcher.start()
+        if self.creative_enabled:
+            try:
+                if (self.creative_root / "state.json").exists():
+                    self.creative().ensure_recovered()
+            except Exception as error:
+                self.creative_error = str(error)
 
     def stop(self):
         self.stop_event.set()
@@ -512,9 +554,89 @@ class Workbench:
             if not target or not target.is_file():
                 return 404, "text/plain; charset=utf-8", b"not found"
             return 200, _content_type(target), target
+        if path in ("/creative", "/creative/", "/creative/index.html"):
+            target = WEB / "index.html"
+            if not target.is_file():
+                return 500, "text/plain; charset=utf-8", b"missing web/index.html"
+            return 200, "text/html; charset=utf-8", target.read_bytes()
+        if path == "/creative.js":
+            target = WEB / "creative.js"
+            if not target.is_file():
+                return 500, "text/plain; charset=utf-8", b"missing web/creative.js"
+            return 200, "text/javascript; charset=utf-8", target.read_bytes()
+        if path.startswith("/api/creative/"):
+            return self._creative_get(path, query)
+        if path == "/creative-media" or path.startswith("/creative-media/"):
+            return self._creative_media(path)
+        if path == "/creative-preview" or path.startswith("/creative-preview/"):
+            return self._creative_preview(path)
         return 404, "text/plain; charset=utf-8", b"not found"
 
+    def _creative_get(self, path, query):
+        try:
+            return self.creative().get(path, query)
+        except CreativeUnavailable as error:
+            payload = {"error": str(error)}
+            if error.detail:
+                payload["detail"] = error.detail
+            return 503, "application/json; charset=utf-8", _json_bytes(payload)
+        except Exception as error:
+            status = getattr(error, "status", 500)
+            extra = getattr(error, "extra", {}) or {}
+            return status, "application/json; charset=utf-8", _json_bytes(
+                {"error": str(error), **extra})
+
+    def _creative_post(self, path, query, body):
+        try:
+            return self.creative().post(path, query, body)
+        except CreativeUnavailable as error:
+            payload = {"error": str(error)}
+            if error.detail:
+                payload["detail"] = error.detail
+            return 503, payload
+        except Exception as error:
+            status = getattr(error, "status", 500)
+            extra = getattr(error, "extra", {}) or {}
+            return status, {"error": str(error), **extra}
+
+    def _creative_media(self, path):
+        relative = urllib.parse.unquote(path[len("/creative-media/"):])
+        if (not relative or "\\" in relative or "\x00" in relative
+                or re.match(r"^[A-Za-z]:", relative)):
+            return 404, "text/plain; charset=utf-8", b"not found"
+        parts = relative.split("/")
+        if (len(parts) < 2 or parts[0] != "projects" or any(
+                part in ("", ".", "..") or part.startswith(".") for part in parts)):
+            return 404, "text/plain; charset=utf-8", b"not found"
+        target = _safe(self.creative_root, relative)
+        if not target or target.is_symlink() or not target.is_file():
+            return 404, "text/plain; charset=utf-8", b"not found"
+        return 200, _content_type(target), target
+
+    def _creative_preview(self, path):
+        if path == "/creative-preview":
+            return 404, "text/plain; charset=utf-8", b"not found"
+        rest = path[len("/creative-preview/"):]
+        preview_id, _, sub = rest.partition("/")
+        preview_id = urllib.parse.unquote(preview_id)
+        if not CREATIVE_PREVIEW_ID.match(preview_id):
+            return 404, "text/plain; charset=utf-8", b"not found"
+        if not sub and not path.endswith("/"):
+            return (301, "text/plain; charset=utf-8", b"",
+                    {"Location": f"/creative-preview/{preview_id}/"})
+        sub = sub or "index.html"
+        try:
+            from creative_workbench import preview as creative_preview
+        except Exception:
+            return 404, "text/plain; charset=utf-8", b"not found"
+        target = creative_preview.resolve(self.creative_root, self.site, preview_id, sub)
+        if not target or not target.is_file():
+            return 404, "text/plain; charset=utf-8", b"not found"
+        return 200, _content_type(target), target
+
     def post(self, path, query, body):
+        if path.startswith("/api/creative/"):
+            return self._creative_post(path, query, body)
         if path == "/api/deliver":
             filename = (query.get("name") or ["image"])[0]
             record = library.ingest_bytes(self.library, body, filename)
@@ -653,7 +775,7 @@ class Handler(http.server.BaseHTTPRequestHandler):
     def log_message(self, format, *args):
         return
 
-    def _send(self, status, content_type, body):
+    def _send(self, status, content_type, body, headers=None):
         if isinstance(body, Path):
             data = body.read_bytes()
         elif isinstance(body, str):
@@ -664,19 +786,26 @@ class Handler(http.server.BaseHTTPRequestHandler):
         self.send_header("Content-Type", content_type)
         self.send_header("Content-Length", str(len(data)))
         self.send_header("Cache-Control", "no-cache")
+        for name, value in (headers or {}).items():
+            self.send_header(name, value)
         self.end_headers()
         if self.command != "HEAD":
             self.wfile.write(data)
 
     def do_GET(self):
         parsed = urllib.parse.urlparse(self.path)
+        headers = None
         try:
-            status, content_type, body = self.workbench.get(parsed.path, urllib.parse.parse_qs(parsed.query))
+            result = self.workbench.get(parsed.path, urllib.parse.parse_qs(parsed.query))
+            if len(result) == 4:
+                status, content_type, body, headers = result
+            else:
+                status, content_type, body = result
         except ValueError as error:
             status, content_type, body = 400, "text/plain; charset=utf-8", str(error).encode("utf-8")
         except Exception as error:
             status, content_type, body = 500, "text/plain; charset=utf-8", str(error).encode("utf-8")
-        self._send(status, content_type, body)
+        self._send(status, content_type, body, headers)
 
     def do_POST(self):
         parsed = urllib.parse.urlparse(self.path)
@@ -707,8 +836,16 @@ def main(argv=None):
     parser.add_argument("--library", type=Path)
     parser.add_argument("--site", type=Path)
     parser.add_argument("--no-browser", action="store_true")
+    parser.add_argument("--creative", dest="creative", action="store_true", default=True,
+                        help="启用绘画／鼠标图样制作区（默认启用）")
+    parser.add_argument("--no-creative", dest="creative", action="store_false",
+                        help="只启动图库处理，不加载制作区")
+    parser.add_argument("--creative-root", type=Path,
+                        help="制作区数据根（默认 .local/output/creative-assets）")
     args = parser.parse_args(argv)
-    workbench = Workbench(args.root, args.library, args.site)
+    workbench = Workbench(args.root, args.library, args.site,
+                          creative_root=args.creative_root,
+                          enable_creative=args.creative)
     handler = functools.partial(Handler, workbench=workbench)
     try:
         workbench.start()

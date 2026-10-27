@@ -35,7 +35,7 @@
 // blurred, which picture is shown, and a map of the keys. Single keys work the page (none with Ctrl,
 // Alt or Cmd, which stay the browser's).
 // Only the name, HELLO and the index (its titles and chapter numbers) are lettered: the
-// margins hold ornaments, never text or pictures, and the final screen has no equations.
+// margins hold ornaments (including the feather cutout), never content, and the final screen has no equations.
 // render(t) is a pure function of time (and of how far the window is docked, folded away and how
 // wide it is docked): skipping is render(END), and a replay restarts the clock with another picture.
 (() => {
@@ -151,16 +151,20 @@
   // it at z = 27. The orbit is followed for `span` time units in RK4 steps of `step` from `from`, a
   // point just under that middle where it crosses into a wing and then switches within a loop or two.
   const LORENZ = { from: [-1.332, 1.4, 24.525], span: 20, step: 0.005, wing: 12 };
+  // The approved transparent feather, normalized to tip -y and root +y without resampling it.
+  // The original film reference and GPT Image reconstruction stay in the local material library.
   const FEATHER = {
-    vane: 'M0 -1C0.1 -0.92 0.22 -0.72 0.25 -0.5L0.255 -0.39L0.11 -0.27L0.252 -0.33C0.262 -0.22 0.266 -0.08 0.258 0.05'
-      + 'L0.248 0.1L0.1 0.21L0.236 0.155C0.215 0.33 0.13 0.52 0.02 0.64L-0.03 0.62C-0.12 0.52 -0.165 0.37 -0.172 0.22'
-      + 'L-0.172 0.16L-0.07 0.215L-0.17 0.1C-0.176 -0.1 -0.172 -0.3 -0.162 -0.43L-0.157 -0.48L-0.06 -0.425L-0.15 -0.545'
-      + 'C-0.12 -0.76 -0.06 -0.93 0 -1Z',
-    shaft: 'M0.01 0.98C0.02 0.5 0.02 -0.3 0 -0.97',
-    down: 'M0.01 0.66C-0.06 0.7 -0.13 0.76 -0.17 0.86M0.01 0.7C0.07 0.74 0.12 0.8 0.15 0.9'
-      + 'M0.01 0.63C-0.09 0.63 -0.17 0.66 -0.23 0.72M0.01 0.68C0.1 0.68 0.17 0.72 0.22 0.79',
+    src: 'ornaments/blue-feather-420f462a.webp', width: 350, height: 512,
+    matrix: '-0.003327 0.002366 -0.002366 -0.003327 1.2481097 0.4480323',
+    bounds: [-0.4462, -1.0479, 0.4414, 1.0546], bands: 12, entry: 550,
+    shaft: 'M0 1.04L0.0116 0.9530Q0.0345 0.8817 0.0489 0.8405Q0.0634 0.7992 0.0733 0.7592Q0.0833 0.7193 0.0908 0.6794Q0.0982 0.6395 0.1045 0.5998Q0.1108 0.5601 0.1168 0.5197Q0.1228 0.4793 0.1280 0.4397Q0.1332 0.4001 0.1361 0.3610Q0.1391 0.3219 0.1417 0.2810Q0.1444 0.2402 0.1472 0.2013Q0.1500 0.1624 0.1515 0.1208Q0.1530 0.0791 0.1548 0.0405Q0.1567 0.0019 0.1584 -0.0392Q0.1601 -0.0804 0.1606 -0.1202Q0.1611 -0.1599 0.1606 -0.1977Q0.1600 -0.2355 0.1592 -0.2612L0.1584 -0.2869C0.16 -0.55 0.09 -0.78 0.03 -0.97',
+    // Drawing guides traced from the approved texture alpha; the bitmap itself stays unchanged.
+    silhouette: "M-0.0065 1.0296L0.0150 0.9893L0.0451 0.8978L0.0612 0.8713L0.0779 0.8594L0.1059 0.8495L0.1567 0.8435L0.1828 0.8449L0.1586 0.8321L0.1572 0.8231L0.1705 0.8136L0.1762 0.8146L0.2328 0.7743L0.2337 0.7686L0.2437 0.7615L0.2609 0.7293L0.2152 0.7567L0.2096 0.7558L0.2105 0.7501L0.2172 0.7454L0.2439 0.6913L0.2572 0.6818L0.2581 0.6761L0.3014 0.6454L0.3023 0.6397L0.3233 0.6198L0.3437 0.5852L0.3414 0.5819L0.3214 0.5961L0.3067 0.5965L0.3324 0.5482L0.3482 0.5069L0.3539 0.4728L0.3278 0.5064L0.3221 0.5054L0.3240 0.4940L0.3959 0.3627L0.3955 0.3480L0.3879 0.3584L0.3746 0.3679L0.3689 0.3669L0.3904 0.2915L0.3919 0.2654L0.3828 0.2668L0.3919 0.2303L0.3896 0.2270L0.3886 0.2327L0.3786 0.2398L0.3729 0.2388L0.3854 0.1648L0.4140 0.0994L0.3903 0.1012L0.4004 0.0590L0.4006 -0.0463L0.4117 -0.1294L0.4112 -0.1441L0.4069 -0.1360L0.3946 -0.1323L0.4018 -0.1925L0.3975 -0.1845L0.3885 -0.1831L0.3987 -0.2604L0.3961 -0.4189L0.3770 -0.5656L0.3723 -0.5722L0.3629 -0.6207L0.3548 -0.6250L0.3407 -0.6800L0.3288 -0.6967L0.3208 -0.7010L0.3128 -0.7404L0.3057 -0.7504L0.3029 -0.7684L0.2873 -0.7974L0.2883 -0.8031L0.2717 -0.8264L0.2707 -0.8207L0.2650 -0.8216L0.2234 -0.8872L0.2177 -0.8882L0.1813 -0.9324L0.1628 -0.9443L0.1618 -0.9386L0.1561 -0.9395L0.1201 -0.9690L0.0533 -1.0067L-0.0231 -1.0225L-0.0354 -1.0187L-0.0473 -1.0002L-0.0606 -0.9908L-0.0663 -0.9917L-0.0896 -0.9752L-0.0953 -0.9761L-0.1842 -0.9179L-0.1894 -0.9042L-0.2203 -0.8772L-0.2527 -0.8241L-0.2660 -0.8147L-0.2703 -0.8066L-0.2756 -0.7577L-0.2932 -0.7402L-0.2947 -0.7141L-0.3128 -0.7113L-0.3219 -0.6748L-0.3318 -0.6677L-0.3509 -0.6241L-0.3648 -0.5591L-0.3639 -0.5296L-0.3849 -0.4746L-0.4007 -0.3983L-0.4169 -0.3717L-0.4188 -0.3603L-0.4094 -0.3470L-0.4010 -0.2929L-0.4003 -0.1581L-0.3951 -0.1367L-0.4004 -0.1230L-0.3975 -0.1050L-0.3734 -0.0570L-0.3754 -0.0456L-0.3588 -0.0223L-0.3598 -0.0166L-0.3735 -0.0219L-0.3768 -0.0195L-0.3797 -0.0024L-0.3746 0.0541L-0.3661 0.0731L-0.3737 0.0835L-0.3568 0.1566L-0.3388 0.1889L-0.3384 0.2036L-0.3498 0.2017L-0.3314 0.2487L-0.3323 0.2544L-0.3404 0.2502L-0.3447 0.2582L-0.3144 0.3219L-0.3154 0.3276L-0.3301 0.3280L-0.3022 0.3883L-0.3032 0.3940L-0.3169 0.3888L-0.3151 0.4125L-0.3090 0.4282L-0.3099 0.4339L-0.3237 0.4286L-0.3246 0.4343L-0.3019 0.4733L-0.3029 0.4790L-0.2840 0.5056L-0.2849 0.5113L-0.2963 0.5094L-0.3010 0.5027L-0.3366 0.4879L-0.3271 0.5012L-0.3214 0.5022L-0.2481 0.6053L-0.2491 0.6110L-0.2150 0.6519L-0.2159 0.6576L-0.2501 0.6518L-0.2885 0.6541L-0.3175 0.6697L-0.2848 0.6665L-0.2482 0.6756L-0.2128 0.7255L-0.2071 0.7264L-0.1929 0.7464L-0.1872 0.7474L-0.1649 0.7716L-0.1692 0.7797L-0.2020 0.7829L-0.2276 0.7962L-0.2096 0.7933L-0.1640 0.8010L-0.1043 0.8287L-0.0730 0.8515L-0.0740 0.8572L-0.0944 0.8567L-0.1371 0.8671L-0.1604 0.8836L-0.1580 0.8869L-0.1481 0.8798L-0.1153 0.8766L-0.0242 0.8920L-0.0252 0.8977L-0.0195 0.8986L-0.0309 0.9318L-0.0286 0.9351L-0.0086 0.9210L-0.0029 0.9219L-0.0040 0.9627L-0.0112 1.0230Z",
+    edges: ["M-0.0065 1.0296L-0.0112 1.0230L-0.0040 0.9627L-0.0029 0.9219L-0.0086 0.9210L-0.0286 0.9351L-0.0309 0.9318L-0.0195 0.8986L-0.0252 0.8977L-0.0242 0.8920L-0.1153 0.8766L-0.1481 0.8798L-0.1580 0.8869L-0.1604 0.8836L-0.1371 0.8671L-0.0944 0.8567L-0.0740 0.8572L-0.0730 0.8515L-0.1043 0.8287L-0.1640 0.8010L-0.2096 0.7933L-0.2276 0.7962L-0.2020 0.7829L-0.1692 0.7797L-0.1649 0.7716L-0.1872 0.7474L-0.1929 0.7464L-0.2071 0.7264L-0.2128 0.7255L-0.2482 0.6756L-0.2848 0.6665L-0.3175 0.6697L-0.2885 0.6541L-0.2501 0.6518L-0.2159 0.6576L-0.2150 0.6519L-0.2491 0.6110L-0.2481 0.6053L-0.3214 0.5022L-0.3271 0.5012L-0.3366 0.4879L-0.3010 0.5027L-0.2963 0.5094L-0.2849 0.5113L-0.2840 0.5056L-0.3029 0.4790L-0.3019 0.4733L-0.3246 0.4343L-0.3237 0.4286L-0.3099 0.4339L-0.3090 0.4282L-0.3151 0.4125L-0.3169 0.3888L-0.3032 0.3940L-0.3022 0.3883L-0.3301 0.3280L-0.3154 0.3276L-0.3144 0.3219L-0.3447 0.2582L-0.3404 0.2502L-0.3323 0.2544L-0.3314 0.2487L-0.3498 0.2017L-0.3384 0.2036L-0.3388 0.1889L-0.3568 0.1566L-0.3737 0.0835L-0.3661 0.0731L-0.3746 0.0541L-0.3797 -0.0024L-0.3768 -0.0195L-0.3735 -0.0219L-0.3598 -0.0166L-0.3588 -0.0223L-0.3754 -0.0456L-0.3734 -0.0570L-0.3975 -0.1050L-0.4004 -0.1230L-0.3951 -0.1367L-0.4003 -0.1581L-0.4010 -0.2929L-0.4094 -0.3470L-0.4188 -0.3603L-0.4169 -0.3717L-0.4007 -0.3983L-0.3849 -0.4746L-0.3639 -0.5296L-0.3648 -0.5591L-0.3509 -0.6241L-0.3318 -0.6677L-0.3219 -0.6748L-0.3128 -0.7113L-0.2947 -0.7141L-0.2932 -0.7402L-0.2756 -0.7577L-0.2703 -0.8066L-0.2660 -0.8147L-0.2527 -0.8241L-0.2203 -0.8772L-0.1894 -0.9042L-0.1842 -0.9179L-0.0953 -0.9761L-0.0896 -0.9752L-0.0663 -0.9917L-0.0606 -0.9908L-0.0473 -1.0002L-0.0354 -1.0187L-0.0231 -1.0225", "M-0.0065 1.0296L0.0150 0.9893L0.0451 0.8978L0.0612 0.8713L0.0779 0.8594L0.1059 0.8495L0.1567 0.8435L0.1828 0.8449L0.1586 0.8321L0.1572 0.8231L0.1705 0.8136L0.1762 0.8146L0.2328 0.7743L0.2337 0.7686L0.2437 0.7615L0.2609 0.7293L0.2152 0.7567L0.2096 0.7558L0.2105 0.7501L0.2172 0.7454L0.2439 0.6913L0.2572 0.6818L0.2581 0.6761L0.3014 0.6454L0.3023 0.6397L0.3233 0.6198L0.3437 0.5852L0.3414 0.5819L0.3214 0.5961L0.3067 0.5965L0.3324 0.5482L0.3482 0.5069L0.3539 0.4728L0.3278 0.5064L0.3221 0.5054L0.3240 0.4940L0.3959 0.3627L0.3955 0.3480L0.3879 0.3584L0.3746 0.3679L0.3689 0.3669L0.3904 0.2915L0.3919 0.2654L0.3828 0.2668L0.3919 0.2303L0.3896 0.2270L0.3886 0.2327L0.3786 0.2398L0.3729 0.2388L0.3854 0.1648L0.4140 0.0994L0.3903 0.1012L0.4004 0.0590L0.4006 -0.0463L0.4117 -0.1294L0.4112 -0.1441L0.4069 -0.1360L0.3946 -0.1323L0.4018 -0.1925L0.3975 -0.1845L0.3885 -0.1831L0.3987 -0.2604L0.3961 -0.4189L0.3770 -0.5656L0.3723 -0.5722L0.3629 -0.6207L0.3548 -0.6250L0.3407 -0.6800L0.3288 -0.6967L0.3208 -0.7010L0.3128 -0.7404L0.3057 -0.7504L0.3029 -0.7684L0.2873 -0.7974L0.2883 -0.8031L0.2717 -0.8264L0.2707 -0.8207L0.2650 -0.8216L0.2234 -0.8872L0.2177 -0.8882L0.1813 -0.9324L0.1628 -0.9443L0.1618 -0.9386L0.1561 -0.9395L0.1201 -0.9690L0.0533 -1.0067L-0.0231 -1.0225"],
+    brushes: [{"d": "M0.08 0.73Q-0.260 0.610 -0.6 0.350", "start": 270, "length": 135}, {"d": "M0.08 0.73Q0.340 0.610 0.6 0.350", "start": 282, "length": 135}, {"d": "M0.14 0.35Q-0.230 0.230 -0.6 -0.030", "start": 300, "length": 135}, {"d": "M0.14 0.35Q0.370 0.230 0.6 -0.030", "start": 312, "length": 135}, {"d": "M0.16 -0.03Q-0.220 -0.150 -0.6 -0.410", "start": 330, "length": 135}, {"d": "M0.16 -0.03Q0.380 -0.150 0.6 -0.410", "start": 342, "length": 135}, {"d": "M0.15 -0.41Q-0.225 -0.530 -0.6 -0.790", "start": 360, "length": 135}, {"d": "M0.15 -0.41Q0.375 -0.530 0.6 -0.790", "start": 372, "length": 135}, {"d": "M0.09 -0.79Q-0.255 -0.910 -0.6 -1.170", "start": 390, "length": 135}, {"d": "M0.09 -0.79Q0.345 -0.910 0.6 -1.170", "start": 402, "length": 135}],
+    barbs: ["M-0.0481 0.6444Q-0.1046 0.5863 -0.1638 0.5254", "M0.2229 0.2995Q0.2488 0.2635 0.2795 0.2210", "M-0.0187 -0.1052Q0.0373 -0.0422 0.0823 0.0083", "M-0.2091 -0.2736Q-0.2605 -0.3131 -0.3142 -0.3544", "M0.2273 -0.5628Q0.2391 -0.6069 0.2520 -0.6554"],
   };
-  const FEATHER_WIDTH = 1.4;   // the feathers are drawn this much wider than the shapes above
+  const featherArt = { texture: null, ready: false };
   // A sakura petal about 2 long: the base towards +y, the notched tip towards -y.
   const PETAL = new Path2D('M0 1C-0.55 0.62 -0.74 -0.16 -0.42 -0.86L0 -0.62L0.42 -0.86C0.74 -0.16 0.55 0.62 0 1Z');
   const GUST_LEN = 700;   // the ring HELLO sends out as it breaks up, sweeping past the screen edges
@@ -176,6 +180,19 @@
   const SPLIT = { normal: 0.54, min: 0.3, max: 0.7, pane: 380, step: 0.02, snap: 12 };
   const FOLD_MS = 500;   // folding the picture away behind a section, or bringing it back aside
   const FOLD_FADE = 0.35;   // the share of a fold over which the section fades out, and again in at its new place
+  // A swipe across a touch screen steps along the index (CONTEXT 滑动切换). It is one once the finger has
+  // gone `slop` px, more across than down, from further in than `edge` px from the screen's sides (the
+  // browser's back gestures are there), unless it rested `hold` ms first (a long press selects words).
+  // The pages follow it, a page's width to a page. Let go past halfway, or flicked (`flick` px/ms, having
+  // gone `least` px), the row goes on to the next page in `settle` ms (the faster the flick, the quicker),
+  // else back in `back` ms; past either end it gives a `give`th of the way, up to `most` of a page, and
+  // comes back in `bounce` ms. The finger's speed is read over its last `sample` ms.
+  const SWIPE = { slop: 10, edge: 24, hold: 500, flick: 0.4, least: 24, settle: [200, 350], back: 250, give: 3, most: 1 / 8, bounce: 300, sample: 100 };
+  // The wheel steps along the index on a computer (CONTEXT 滚轮切换). A turn of it is its events with no
+  // more than `pause` ms between them (a touchpad's coasting is part of the turn). It scrolls what is
+  // under the pointer if that can still go that way; else, once it has gone `least` px, it turns one
+  // page. A turn that has scrolled something or turned a page does nothing more.
+  const WHEEL = { pause: 300, least: 16 };
   // The picture folded away behind a section is blurred as much as the visitor sets in the settings
   // (0 to 1, none by default) up to `max` px, pushed in a little (a share per px) to keep the blur's
   // soft edge off the screen. (The frosted block behind the section's text is in styles.css.)
@@ -252,6 +269,8 @@
   // How far in from the right-hand meter's line the section index stands on a wide screen, for the
   // focus scale that takes the meter's place (drawScale).
   const INDEX_IN = 20;
+  // The focus scale's blue tick goes over to a new square in LIT_MS, as the brackets lock on (styles.css).
+  const LIT_MS = 450;
   // The settings' starting values: the frosted block's strength and the picture's blur (0 to 1).
   const LOOKS = { glass: 0.5, blur: 0 };
   // Another picture put up from the settings: a rack focus, in ms from when the new picture is in
@@ -265,8 +284,8 @@
     close: 8, closing: 300, lock: 1240, spring: 320, flash: 480,
   };
   // The visitor's choices, kept for the visit in sessionStorage: the split, whether the picture is
-  // folded away, the blurs, the time of day and the picture chosen in the settings. (time.js reads the
-  // time of day there too, for the first paint.)
+  // folded away, the blurs, the time of day, the picture chosen in the settings and ABOUT's language
+  // (null: the browser's). (time.js reads the time of day there too, for the first paint.)
   const PREFS_KEY = 'home:prefs';
   // How often the time of day is worked out again while the page is open (ms): the paper darkens a
   // little at a time through the hour round sunset.
@@ -321,6 +340,109 @@
   const kb = $('#kb'), kbSay = $('#kbSay'), kbList = $('#kbList'), keyEls = new Map();   // the keyboard map's keys by code
   const clouds = Object.fromEntries($$('.cloud').map(el => [el.dataset.sky, el]));
   const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  // The loading shell (boot.js), or a real fallback where that script could not be had: the same
+  // 0.6 s shell, 15 s no-progress deadline, skip and fallback, owned here so a missing boot.js cannot
+  // leave the opening waiting forever. The shell's DOM and critical style are in index.html; this only
+  // drives its state (its dial turns; nothing is drawn, fetched early or handed off). If boot.js arrives
+  // later it sees window.HOME_BOOT and stands down.
+  const HOME_BOOT = window.HOME_BOOT || (() => {
+    const shell = () => document.getElementById('boot');
+    let enabled = true;
+    try { enabled = !sessionStorage.getItem('home:opening-seen'); } catch { /* no storage: a first visit */ }
+    try { enabled = enabled && !matchMedia('(prefers-reduced-motion: reduce)').matches; } catch { /* no media queries */ }
+    let active = false, done = false, shown = false, skipped = false, timedOut = false;
+    let showTimer = 0, idleTimer = 0, timeoutResolve = () => {}, deadline = 0, hiddenAt = 0;
+    const timeout = new Promise(resolve => { timeoutResolve = resolve; });
+    const skipHandlers = [], fallbackHandlers = [];
+    const clear = () => { clearTimeout(showTimer); clearTimeout(idleTimer); };
+    const hide = () => {
+      if (done) return;
+      done = true;
+      active = false;
+      hiddenAt = 0;
+      clear();
+      const el = shell();
+      if (el) { el.hidden = true; el.classList.remove('on'); }
+    };
+    const fail = () => {
+      if (done) return;
+      timedOut = true;
+      hide();
+      for (const handler of fallbackHandlers) handler();
+      timeoutResolve('timeout');
+    };
+    const show = () => {
+      if (done || shown || !enabled) return;
+      shown = true;
+      const el = shell();
+      if (el) {
+        el.hidden = false;
+        el.classList.add('on');
+        el.dataset.shown = String(Math.round(performance.now()));
+      }
+    };
+    const progress = () => {
+      if (done) return;
+      deadline = performance.now() + 15000;
+      if (document.hidden) { clearTimeout(idleTimer); return; }
+      clearTimeout(idleTimer);
+      idleTimer = setTimeout(fail, 15000);
+    };
+    const begin = () => {
+      if (active) return;
+      active = true;
+      done = false;
+      shown = false;
+      skipped = false;
+      timedOut = false;
+      hiddenAt = 0;
+      clear();
+      deadline = performance.now() + 15000;
+      // (0.6 s after the visitor opened the page, as boot.js has it)
+      if (enabled) showTimer = setTimeout(show, Math.max(0, 600 - performance.now()));
+      idleTimer = setTimeout(fail, 15000);
+    };
+    const ready = () => {
+      if (done) return;
+      hide();
+    };
+    const skip = () => {
+      if (done) return;
+      skipped = true;
+      hide();
+      for (const handler of skipHandlers) handler();
+    };
+    const onSkip = handler => {
+      skipHandlers.push(handler);
+      if (skipped) handler();
+    };
+    const onFallback = handler => {
+      fallbackHandlers.push(handler);
+      if (timedOut) handler();
+    };
+    // The same pause the normal controller gets: a background wait does not spend the
+    // foreground's 15 s no-progress budget. The deadline moves by the time spent hidden.
+    document.addEventListener('visibilitychange', () => {
+      if (!active || done) return;
+      const at = performance.now();
+      if (document.hidden) {
+        if (!hiddenAt) hiddenAt = at;
+        clearTimeout(idleTimer);
+        clearTimeout(showTimer);
+        return;
+      }
+      if (hiddenAt) { deadline += at - hiddenAt; hiddenAt = 0; }
+      clearTimeout(idleTimer);
+      idleTimer = setTimeout(fail, Math.max(0, deadline - at));
+      if (!shown && enabled) { clearTimeout(showTimer); showTimer = setTimeout(show, 600); }
+    });
+    return {
+      enabled, pick: -1, get done() { return done; }, get skipped() { return skipped; },
+      get timedOut() { return timedOut; }, progress, begin, ready, skip, onSkip, onFallback, timeout,
+      handoff: () => { ready(); return Promise.resolve(); },
+    };
+  })();
+  if (!window.HOME_BOOT) window.HOME_BOOT = HOME_BOOT;
   // The page's own scrollbars (makeScrollbar): the panel's, and the settings' pictures' for when they
   // scroll on their own (spread across the middle of the screen; white there, like the lettering), kept
   // down their right edge (the bar is 12px wide, styles.css).
@@ -379,6 +501,13 @@
   const state = {
     manifest: { scenes: [], sky: {} }, scene: null, sceneIndex: -1, layout: null, birds: [],
     start: 0, running: false, raf: 0, playToken: 0, debugT: null, size: null,
+    phase: 'idle',   // waiting (the opening's resources are coming in), playing, idle
+    skipLock: 0,   // a touch just after the opening started does not skip it
+    prepareAbort: null,   // aborts the wait for the opening's resources when it is given up
+    fillReady: null,   // the fill's thumbnail, once showScene has set it in
+    // the sharp layer still on its way when the opening started (boot.js: startable), and when in the
+    // opening it came in (null until then): the focus pull waits for it
+    sharpLate: false, sharpAt: null,
     windowBox: '', sceneSize: '',   // what the window and the picture were last placed and sized to
     washes: 0,   // the fill painted afresh (or cleared) so many times; the ornament's colours follow it
     washFrom: null,   // the thumbnail the fill is painted from (none while it is cleared)
@@ -432,11 +561,29 @@
   // The replay button is there (1) on the opening screen and in the settings, and away (0) in the other
   // sections; it fades between as the section changes.
   const replayShown = { value: 1 };
-  const prefs = { split: SPLIT.normal, folded: false, glass: LOOKS.glass, blur: LOOKS.blur, time: 'auto', scene: null };
+  // Where the focus scale's blue tick is along the index's squares (0 the first) on its way to the
+  // current one after a change of section (drawLit).
+  const litTick = { value: 0 };
+  const prefs = { split: SPLIT.normal, folded: false, glass: LOOKS.glass, blur: LOOKS.blur, time: 'auto', scene: null, lang: null };
   const swap = { count: 0, layer: null, anims: [], marks: [] };
   const tweens = new Map();   // value holder -> { from, to, began, length, curve }
   let tweenFrame = 0;
   const drag = { id: null, x0: 0, x: 0, grab: 0, from: 0, moved: false };
+  // The row of pages a swipe moves (CONTEXT 滑动切换): value is where along the index the screen is (0 the
+  // opening screen, 1 ABOUT and so on, fractions between; a little past either end as it gives), on
+  // while the row is out of place (under a finger, or easing into place). base is the page the swipe is
+  // about (the one shown, or the one the row was going to when caught) and heading which way the row
+  // was going then (0: at rest). w is a page's width (px), squares the index's squares (nav px), top and
+  // side where a page coming in is put in the panel (px: the panel's top in view, which pad is past; its
+  // side padding), seen the pages that have come in since the row moved (their entrances are skipped).
+  const slide = { value: 0, on: false, base: 0, heading: 0, w: 1, squares: [], top: 0, pad: 0, side: [0, 0], seen: new Set() };
+  // A finger that may be swiping: where and when it went down, whether it has been taken for a swipe
+  // (live), where it was then (ax) and the row with it (at), and where it has been lately (track, [time,
+  // x] pairs). ended is when the last swipe let go (the click it may set off is not let through).
+  const swipe = { id: null, x0: 0, y0: 0, t0: 0, live: false, ax: 0, at: 0, track: [], ended: 0 };
+  // The wheel's turn under way (WHEEL): when it last moved, how far it has gone (px, down) and whether it
+  // has scrolled something or turned a page.
+  const wheel = { last: -Infinity, sum: 0, used: false };
   // The surf's puffs of cloud and their shadows by day, at dusk and at night, cut from the cloud photos
   // once they are in (puffSprites), and two of them mixed for a time between (toneSprites); they do not
   // depend on the layout, so every layout shares them.
@@ -622,17 +769,58 @@
     };
   }
 
-  function makeFeather(parent) {
+  function makeFeather(parent, index) {
+    const defs = guides.querySelector('defs');
+    if (!featherArt.texture) {
+      featherArt.texture = svg('image', {
+        id: 'blueFeatherTexture', width: FEATHER.width, height: FEATHER.height,
+        transform: `matrix(${FEATHER.matrix})`,
+      }, defs);
+      const color = svg('linearGradient', {
+        id: 'feather-wash-color', gradientUnits: 'userSpaceOnUse', x1: 0, y1: 0.9, x2: 0, y2: -1,
+      }, defs);
+      [[0, '#32b8de'], [0.5, '#278fe8'], [1, '#0664ed']].forEach(([offset, tint]) =>
+        svg('stop', { offset, 'stop-color': tint }, color));
+      const wash = svg('g', { id: 'feather-wash-shape' }, defs);
+      // Paint is explicit on the definition: SVG use instances do not consistently inherit
+      // ancestor-qualified stylesheet rules into their shadow tree across engines.
+      svg('path', { d: FEATHER.silhouette, style: 'fill:url(#feather-wash-color);stroke:none' }, wash);
+      svg('path', { d: FEATHER.shaft, style: 'fill:none;stroke:#98d9ed;stroke-width:0.035;stroke-linecap:round' }, wash);
+    }
+    const [left, top, right, bottom] = FEATHER.bounds;
+    const box = { x: left - 0.35, y: top - 0.1, width: right - left + 0.7, height: bottom - top + 0.2 };
+    const id = `feather-${index}`;
+    const mask = svg('mask', {
+      id: `${id}-reveal`, maskUnits: 'userSpaceOnUse', maskContentUnits: 'userSpaceOnUse',
+      'mask-type': 'alpha', ...box,
+    }, defs);
+    const pen = svg('path', { class: 'feather-pen', d: FEATHER.shaft, pathLength: 1, 'stroke-width': 0.085 }, mask);
+    const brushes = FEATHER.brushes.map(pass => ({
+      ...pass, el: svg('path', { class: 'feather-brush', d: pass.d, pathLength: 1 }, mask),
+    }));
     const g = svg('g', { class: 'feather' }, parent);
+    const appearance = svg('g', { class: 'feather-color' }, g);
+    svg('use', { href: '#feather-wash-shape', class: 'feather-wash' }, appearance);
     show(g, false);
-    // every other number in the paths is an x (all their commands are absolute)
-    const wide = d => { let i = 0; return d.replace(/-?\d*\.?\d+/g, n => (i++ % 2 ? n : String(+(n * FEATHER_WIDTH).toFixed(3)))); };
-    return {
-      g,
-      vane: svg('path', { class: 'vane', d: wide(FEATHER.vane), pathLength: 1 }, g),
-      down: svg('path', { class: 'down', d: wide(FEATHER.down) }, g),
-      shaft: svg('path', { class: 'shaft', d: wide(FEATHER.shaft) }, g),
-    };
+    // Each strip follows a tangent of the same curve. The small overlap keeps its soft alpha edge
+    // continuous; the root stays anchored while the tip follows a little later.
+    const height = (bottom - top) / FEATHER.bands;
+    const bands = Array.from({ length: FEATHER.bands }, (_, i) => {
+      const y = top + i * height;
+      const clip = svg('clipPath', { id: `${id}-band-${i}`, clipPathUnits: 'userSpaceOnUse' }, defs);
+      svg('rect', { x: left, y: y - 0.012, width: right - left, height: height + 0.024, class: 'feather-clip' }, clip);
+      const band = svg('g', {}, appearance);
+      const crop = svg('g', { 'clip-path': `url(#${id}-band-${i})` }, band);
+      svg('use', { href: '#blueFeatherTexture', class: 'feather-texture' }, crop);
+      return { g: band, y: y + height / 2 };
+    });
+    // Actual strokes over the paper, independent of the colour mask: shaft, two edges, then barbs.
+    const ink = svg('g', { class: 'feather-structure' }, g);
+    const lines = [FEATHER.shaft, ...FEATHER.edges].map(d =>
+      svg('path', { class: 'feather-line', d, pathLength: 1 }, ink));
+    const detail = svg('g', { class: 'feather-detail' }, g);
+    const barbs = FEATHER.barbs.map(d => svg('path', { class: 'feather-line', d, pathLength: 1 }, detail));
+    return { g, appearance, pen, brushes, bands, ink, lines, detail, barbs, id };
   }
 
   // Butterflies and blue-bird feathers on the paper, under the cluster lines (so the cluster's
@@ -642,7 +830,7 @@
     return {
       specimen: makeSpecimen(g),
       butterflies: [makeButterfly(g, ''), makeButterfly(g, 'pale')],
-      feathers: [makeFeather(g), makeFeather(g)],
+      feathers: [makeFeather(g, 0), makeFeather(g, 1)],
     };
   }
 
@@ -754,7 +942,7 @@
   // a long one at each square and the current one's blue.
   function makeScale() {
     const g = svg('svg', { class: 'scale', 'aria-hidden': 'true' }, indexNav);
-    return { fine: svg('path', { class: 'fine' }, g), long: svg('path', { class: 'long' }, g), lit: svg('path', { class: 'lit' }, g) };
+    return { fine: svg('path', { class: 'fine' }, g), long: svg('path', { class: 'long' }, g), lit: svg('path', { class: 'lit' }, g), at: null };
   }
 
   const paper = makeGuides();
@@ -1159,10 +1347,9 @@
     // butterflies: [x, y, the way they drift in degrees]; feathers: [x, y]
     const spots = portrait
       ? { butterflies: [[0.2 * W, 0.55 * win.y, 190], [0.6 * W, below + 0.55 * (H - below), -20]],
-          feathers: [[0.42 * W, 0.6 * win.y], [0.8 * W, below + 0.25 * (H - below)], [0.9 * W, below + 0.62 * (H - below)]] }
+          feathers: [[0.36 * W, 0.54 * win.y], [0.83 * W, below + 0.28 * (H - below)]] }
       : { butterflies: [[0.52 * win.x, win.y + 0.2 * win.h, -110], [right + 0.45 * (W - right), win.y + 0.47 * win.h, 75]],
-          feathers: [[0.42 * win.x, win.y + 0.56 * win.h], [right + 0.3 * (W - right), win.y + 0.7 * win.h],
-            [right + 0.66 * (W - right), win.y + 0.86 * win.h]] };
+          feathers: [[0.42 * win.x, win.y + 0.56 * win.h], [right + 0.3 * (W - right), win.y + 0.7 * win.h]] };
     // the specimen about two cluster units across (u px to a Lorenz unit), its fixed points a little
     // over the cluster's middle (at y mid) and its body (bodyK across a unit) on them
     const [cx, cy, a] = L.clusters[0], mid = cy - 0.1 * a;
@@ -1171,7 +1358,9 @@
     specimen.blow = gustHit(gust, () => specimen);
     const M = {
       gust, specimen,
-      fly: 1.125 * u, quill: 1.69 * u,   // butterfly wingspan 2.25, feather length 3.4 bird units
+      fly: 1.125 * u,
+      // A tablet's portrait margin can be shallower than a phone's; keep the whole vane in it.
+      quill: portrait ? Math.min(1.69 * u, 0.32 * win.y) : 1.69 * u,
       butterflies: spots.butterflies.map(([x, y, course], i) => {
         const rad = course * Math.PI / 180, drawn = BEAT.hello + 40 + 90 * i;
         // the first starts with its wingbeats, the second with a glide
@@ -1185,10 +1374,10 @@
       }),
     };
     M.feathers = spots.feathers.map(([x, y], i) => {
-      const drawn = BEAT.hello + 120 + 110 * i;
+      const drawn = BEAT.hello + 60 + 120 * i;
       const f = {
-        x, y, tilt: [-22, 28, -12][i], phase: [0.3, 2.2, 4.1][i], spin: i % 2 ? 1 : -1, drawn, alive: drawn + 360,
-        swing: 0.6 * M.quill, dip: 0.12 * M.quill, fall: 0.035 * H,
+        x, y, tilt: [-20, 25][i], phase: [0.6, 2.8][i], spin: i % 2 ? 1 : -1, drawn, alive: drawn + FEATHER.entry,
+        swing: 0.45 * M.quill, dip: 0.08 * M.quill, fall: (portrait ? 0.012 : 0.018) * H,
       };
       f.rings = ringPasses(L, t => featherAt(f, t));
       f.blow = gustHit(gust, t => featherAt(f, t));
@@ -1208,9 +1397,9 @@
       hairline(b.body.slice(0, 2), 1, M.fly);
     }
     for (const f of motifs.feathers) {
-      hairline([f.vane], 0.9, M.quill);
-      hairline([f.shaft], 1.2, M.quill);
-      hairline([f.down], 0.8, M.quill);
+      hairline(f.lines.slice(0, 1), 1.15, M.quill);
+      hairline(f.lines.slice(1), 0.85, M.quill);
+      hairline(f.barbs, 0.9, M.quill);
     }
   }
 
@@ -1969,8 +2158,10 @@
     return {
       x: f.x + life * f.swing * (Math.sin(phi) - Math.sin(f.phase)),
       y: f.y + life * (f.fall * tau + f.dip * (Math.cos(2 * phi) - Math.cos(2 * f.phase))),
-      tilt: f.tilt + life * 24 * (Math.cos(phi) - Math.cos(f.phase)),
-      turn: 1 - life * 0.25 * (0.5 - 0.5 * Math.cos(1.2 * tau)),
+      tilt: f.tilt + life * 16 * (Math.cos(phi) - Math.cos(f.phase)),
+      turn: 1 - life * 0.48 * (0.5 - 0.5 * Math.cos(3.2 * tau + f.phase)),
+      bend: life * 16 * DEG * 0.6 * (Math.cos(phi - 0.45) - Math.cos(f.phase - 0.45)
+        - Math.cos(phi) + Math.cos(f.phase)),
     };
   }
 
@@ -2034,16 +2225,54 @@
   }
 
   function drawFeather(t, node, f, size) {
-    if (t < f.drawn) { show(node.g, false); return; }
-    drawIn([node.vane], t, f.drawn, 260);
-    node.shaft.style.opacity = node.down.style.opacity = ease.out(seg(t, f.drawn + 160, 180)).toFixed(3);
-    // HELLO's first rings nudge it (about 8 px); the last one carries it off, slowly turning and
-    // rolling over
+    if (!featherArt.ready || t < f.drawn || t >= END) { show(node.g, false); return; }
+    // HELLO's first rings nudge it; the last one carries it off, turning and rolling over.
     const at = featherAt(f, t), n = nudged(t, f.rings), { since, push } = blown(t, f.blow.at);
     const x = at.x + 8 * n.x + f.blow.away[0] * push, y = at.y + 8 * n.y + f.blow.away[1] * push;
-    show(node.g, !offscreen(x, y));
-    if (offscreen(x, y)) return;
+    const radius = 1.6 * size, L = state.layout;
+    const outside = x < -radius || y < -radius || x > L.W + radius || y > L.H + radius;
+    show(node.g, !outside);
+    if (outside) return;
+    const age = t - f.drawn, entry = seg(t, f.drawn, FEATHER.entry);
+    if (entry < 1) {
+      // First leave real lines on the paper; the colour follows in five oblique brush passes.
+      node.appearance.setAttribute('mask', `url(#${node.id}-reveal)`);
+      node.pen.style.opacity = age >= 270 ? '1' : '0';
+      for (const brush of node.brushes) {
+        const p = seg(age, brush.start, brush.length);
+        brush.el.style.opacity = p > 0 ? '1' : '0';
+        brush.el.style.strokeDashoffset = (1 - ease.out(p)).toFixed(4);
+        brush.el.style.strokeWidth = (0.08 + 0.44 * ease.out(p)).toFixed(4);
+      }
+      const picture = ease.inOut(seg(age, 420, 130));
+      node.appearance.style.setProperty('--feather-photo', picture.toFixed(4));
+      node.appearance.style.setProperty('--feather-wash', picture < 1 ? '1' : '0');
+      node.ink.style.opacity = (1 - ease.inOut(seg(age, 300, 250))).toFixed(4);
+      node.lines.forEach((line, i) => {
+        const start = [0, 75, 105][i], length = i ? 205 : 110;
+        line.style.strokeDashoffset = (1 - ease.inOut(seg(age, start, length))).toFixed(4);
+        line.style.opacity = age > start ? '1' : '0';
+      });
+      node.detail.style.opacity = (ease.out(seg(age, 390, 45)) * (1 - ease.inOut(seg(age, 500, 50)))).toFixed(4);
+      node.barbs.forEach((line, i) => {
+        const start = 400 + i * 18;
+        line.style.strokeDashoffset = (1 - ease.out(seg(age, start, 78))).toFixed(4);
+        line.style.opacity = age > start ? '1' : '0';
+      });
+    } else {
+      node.appearance.removeAttribute('mask');
+      node.appearance.style.setProperty('--feather-photo', '1');
+      node.appearance.style.setProperty('--feather-wash', '0');
+      node.ink.style.opacity = node.detail.style.opacity = '0';
+    }
     const tilt = at.tilt + f.spin * 150 * since, roll = at.turn * Math.cos(2.2 * since);
+    const lateral = n.x * Math.cos(tilt * DEG) + n.y * Math.sin(tilt * DEG);
+    const bend = at.bend + 0.045 * lateral * ease.inOut(seg(t, f.alive, 160)) + f.spin * 0.12 * Math.sin(6 * since) * ease.out(seg(t, f.blow.at, 180));
+    for (const band of node.bands) {
+      const fromRoot = clamp01((1 - band.y) / 2);
+      const offset = bend * fromRoot * fromRoot, shear = -bend * fromRoot;
+      band.g.setAttribute('transform', `matrix(1 0 ${shear.toFixed(4)} 1 ${(offset - shear * band.y).toFixed(4)} 0)`);
+    }
     node.g.setAttribute('transform', `translate(${fixed(x)} ${fixed(y)}) rotate(${fixed(tilt)}) scale(${(size * roll).toFixed(3)} ${size.toFixed(2)})`);
   }
 
@@ -2137,7 +2366,10 @@
         state.fillFade = fade;
         sceneFill.style.webkitMaskImage = sceneFill.style.maskImage = fade;
       }
-      sceneNear.style.opacity = ease.inOut(seg(t, BEAT.focus, BEAT.focusLen)).toFixed(3);
+      // the sharp layer comes in with the focus pull; one still on its way then comes in as soon as it
+      // arrives, like a camera hunting for focus (until then the picture stays soft)
+      const focusAt = !state.sharpLate ? BEAT.focus : state.sharpAt == null ? Infinity : Math.max(BEAT.focus, state.sharpAt);
+      sceneNear.style.opacity = ease.inOut(seg(t, focusAt, BEAT.focusLen)).toFixed(3);
       scenePush.style.transform = `scale(${(1 + (PUSH - 1) * ease.out(seg(t, BEAT.focus, 1000))).toFixed(4)})`;
       // the fill's grid, drawn out from the picture's edges by the pen as the window opens (and gone
       // over again by it after a change of picture)
@@ -3249,6 +3481,64 @@
     const seen = spread ? seg(p, 1 - FOLD_FADE, FOLD_FADE) : 1 - seg(p, 0, FOLD_FADE);
     const opacity = seen < 1 ? seen.toFixed(3) : '';
     for (const el of [...panes, panelBar.bar]) if (el.style.opacity !== opacity) el.style.opacity = opacity;
+    return { box, spread };
+  }
+
+  // The row of pages as a swipe has it (CONTEXT 滑动切换): the two pages either side of where it is,
+  // side by side a page's width apart. The page shown keeps its place in the panel (and how far it was
+  // scrolled); one coming in is put at the panel's top in view, as it is (its entrance skipped). While
+  // the window gives way on the opening screen's side, a section shows only on the paper it leaves
+  // (spread across the middle, over the folded-away picture, it is meant to be on the picture). The
+  // index's brackets go along with the row, and so does the focus scale's blue tick, every square
+  // keeping a tick of its own meanwhile.
+  function drawSlide(shot, { box, spread }) {
+    if (!slide.on) return;
+    const L = state.layout, pos = slide.value, here = TABS.indexOf(dock.tab);
+    const i = Math.max(0, Math.min(TABS.length - 2, Math.floor(pos))), f = pos - i;
+    const put = (el, name, value) => { if (el.style[name] !== value) el.style[name] = value; };
+    for (const pane of panes) {
+      const k = TABS.indexOf(pane.dataset.tab), seen = k === i || k === i + 1;
+      const x = `translateX(${fixed((k - pos) * slide.w)}px)`;
+      if (k === here) {
+        put(pane, 'transform', x);
+        put(pane, 'visibility', seen ? '' : 'hidden');
+        continue;
+      }
+      if (!seen) {
+        if (!pane.hidden) pane.hidden = true;
+        continue;
+      }
+      put(pane, 'position', 'absolute');
+      put(pane, 'top', `${fixed(slide.top)}px`);
+      put(pane, 'left', `${fixed(slide.side[0])}px`);
+      put(pane, 'right', `${fixed(slide.side[1])}px`);
+      put(pane, 'transform', x);
+      if (pane.hidden) pane.hidden = false;
+      if (slide.seen.has(pane)) continue;
+      slide.seen.add(pane);
+      asItIs(pane);
+      if (pane.dataset.tab === 'settings') loadPicks();
+    }
+    let top = 0, left = 0;
+    if (!spread && pos < 1) {
+      const r = shot.rect;
+      if (L.portrait) top = Math.max(0, r.y + r.h - box.y);
+      else left = Math.max(0, r.x + r.w - box.x);
+    }
+    put(panel, 'clipPath', top || left ? `inset(${fixed(top)}px 0px 0px ${fixed(left)}px)` : '');
+    const a = slide.squares[i], b = slide.squares[i + 1];
+    if (a && b) {
+      setVar(brackets, '--x', `${fixed(lerp(a.x, b.x, f))}px`);
+      setVar(brackets, '--y', `${fixed(lerp(a.y, b.y, f))}px`);
+    }
+    putLit(pos, true);
+  }
+
+  // A page coming in under the finger is seen as it is: its entrance (styles.css) is over at once.
+  function asItIs(pane) {
+    for (const a of pane.getAnimations({ subtree: true })) {
+      try { a.finish(); } catch { a.cancel(); }   // (an endless one cannot be finished)
+    }
   }
 
   // The divider, with a section open on a wide screen: on the docked picture's right edge, moving to
@@ -3286,7 +3576,8 @@
     drawHud(t, camY, shot);
     drawIdentity(t, shot);
     drawIndex(t, shot);
-    drawPanel(shot);
+    drawSlide(shot, drawPanel(shot));
+    drawLit();
     drawDivider(shot);
     // the replay button comes in last; on a phone it would sit on a section's text, so it steps out
     // as soon as the window starts to dock. Gone, it cannot be reached by the keyboard either.
@@ -3302,7 +3593,8 @@
   const homeUrl = () => location.pathname + location.search;
 
   // Marks the current section in the index and puts the focus brackets on its square, with the
-  // lock-on when the section has changed (they are placed afresh after every layout).
+  // lock-on when the section has changed ('snap': only a slight one, the brackets having come along the
+  // index with a swipe; they are placed afresh after every layout).
   function placeBrackets(lock) {
     const active = indexLinks.find(link => link.dataset.tab === dock.tab);
     indexLinks.forEach(link => {
@@ -3316,61 +3608,120 @@
     brackets.style.setProperty('--s', `${tile.offsetWidth}px`);
     drawScale();
     if (!lock) return;
-    brackets.classList.remove('lock');
+    brackets.classList.remove('lock', 'snap');
     void brackets.offsetWidth;   // restart the lock-on
-    brackets.classList.add('lock');
+    brackets.classList.add(lock === 'snap' ? 'snap' : 'lock');
   }
 
   // The index's focus scale, like the one on a lens (CONTEXT 板块索引): a hairline beside the squares,
   // on a wide screen on the right-hand meter's line, whose place it takes (the squares stand INDEX_IN
   // in from it), on a phone just over them. A long tick points at each square's middle, the current
   // one's blue and a little longer; fine ticks run between, six to a square's pitch, a little past the
-  // end squares.
+  // end squares. Where the squares' ticks go is kept (at) for the blue one to go along them (putLit).
   function drawScale() {
     const portrait = stage.classList.contains('portrait');
     const tiles = indexLinks.map(link => {
       const b = link.querySelector('b');
-      return { at: (portrait ? link.offsetLeft + b.offsetLeft : link.offsetTop + b.offsetTop) + b.offsetWidth / 2, side: b.offsetWidth, on: link.classList.contains('active') };
+      return { at: (portrait ? link.offsetLeft + b.offsetLeft : link.offsetTop + b.offsetTop) + b.offsetWidth / 2, side: b.offsetWidth };
     });
+    const clearScale = () => {
+      indexScale.fine.setAttribute('d', '');
+      indexScale.long.setAttribute('d', '');
+      indexScale.lit.setAttribute('d', '');
+      indexScale.at = null;
+    };
+    // Before the stylesheet and fonts give the index its geometry, every offset is zero.
+    // A zero step used to make the tick loop append without bound (RangeError); leave the
+    // scale empty now, and the style/font readiness relayout will draw it for real.
+    if (tiles.length < 2 || tiles.some(q => !Number.isFinite(q.at) || !Number.isFinite(q.side) || q.side <= 0)) {
+      clearScale();
+      return;
+    }
     const step = (tiles[1].at - tiles[0].at) / 6, first = tiles[0].at - (portrait ? 2 : 3) * step, last = tiles[tiles.length - 1].at + (portrait ? 2 : 3) * step;
     // the line (nav px) and which way the ticks point from it, towards the squares
     const line = portrait ? indexLinks[0].offsetTop + indexLinks[0].querySelector('b').offsetTop - 13 : indexNav.offsetWidth + INDEX_IN - 3;
+    if (!Number.isFinite(step) || step <= 0.01 || !Number.isFinite(first) || !Number.isFinite(last) || !Number.isFinite(line)) {
+      clearScale();
+      return;
+    }
     const dir = portrait ? 1 : -1, reach = portrait ? 6 : INDEX_IN - 7;
     const tick = (along, length) => (portrait ? `M${fixed(along)} ${fixed(line)}V${fixed(line + dir * length)}` : `M${fixed(line)} ${fixed(along)}H${fixed(line + dir * length)}`);
     let fine = portrait ? `M${fixed(first)} ${fixed(line)}H${fixed(last)}` : `M${fixed(line)} ${fixed(first)}V${fixed(last)}`;
-    for (let k = -(portrait ? 2 : 3); first + (k + (portrait ? 2 : 3)) * step <= last + 0.1; k++) {
+    const from = -(portrait ? 2 : 3);
+    const count = Math.min(240, Math.max(0, Math.floor((last - first) / step) + 1));
+    for (let i = 0; i < count; i++) {
+      const k = from + i;
       if (k % 6) fine += tick(tiles[0].at + k * step, k % 3 ? 3 : 5);
     }
     indexScale.fine.setAttribute('d', fine);
-    indexScale.long.setAttribute('d', tiles.filter(q => !q.on).map(q => tick(q.at, reach)).join(''));
-    indexScale.lit.setAttribute('d', tiles.filter(q => q.on).map(q => tick(q.at, reach + 2)).join(''));
+    indexScale.at = { squares: tiles.map(q => q.at), tick, reach };
+    drawLit();
   }
 
-  const drawFinal = () => render(state.debugT ?? END);
+  // The focus scale's blue tick: on its way to the current square after a change of section (it slides
+  // over in LIT_MS, CONTEXT 板块索引), or there. (Where a swipe has it, drawSlide puts it.)
+  function drawLit() {
+    if (slide.on) return;
+    const moving = tweens.has(litTick);
+    putLit(moving ? litTick.value : TABS.indexOf(dock.tab), moving);
+  }
+
+  // Puts the blue tick at pos along the squares (0 the first; past either end it leans out). At rest on
+  // a square, that square's long tick is the blue one; on its way, every square keeps an ink one.
+  function putLit(pos, moving) {
+    const S = indexScale.at;
+    if (!S) return;
+    const i = Math.max(0, Math.min(S.squares.length - 2, Math.floor(pos))), on = moving ? -1 : pos;
+    const long = S.squares.filter((_, k) => k !== on).map(at => S.tick(at, S.reach)).join('');
+    const lit = S.tick(lerp(S.squares[i], S.squares[i + 1], pos - i), S.reach + 2);
+    if (indexScale.long.getAttribute('d') !== long) indexScale.long.setAttribute('d', long);
+    if (indexScale.lit.getAttribute('d') !== lit) indexScale.lit.setAttribute('d', lit);
+  }
+
+  const drawFinal = () => {
+    if (slide.on) followSlide();
+    render(state.debugT ?? END);
+  };
   const drawSoon = () => { if (!tweenFrame) tweenFrame = requestAnimationFrame(stepTweens); };
 
-  // Eases a value of the final screen (dock, fold, split or the replay button's being there) to target
-  // over ms along curve (at once with reduced motion), drawing the final screen as it goes.
-  function moveTo(holder, target, ms, curve = p => p) {
+  // Eases a value of the final screen (dock, fold, split, the replay button's being there or the row of
+  // pages) to target over ms along curve (at once with reduced motion), drawing the final screen as it
+  // goes; then done, if given, once that is drawn.
+  function moveTo(holder, target, ms, curve = p => p, done) {
     tweens.delete(holder);
     if (reduceMotion || ms <= 0) {
       holder.value = target;
       drawFinal();
+      done?.();
       return;
     }
-    tweens.set(holder, { from: holder.value, to: target, began: performance.now(), length: ms, curve });
+    tweens.set(holder, { from: holder.value, to: target, began: performance.now(), length: ms, curve, done });
     drawSoon();
   }
 
   function stepTweens(now) {
     tweenFrame = 0;
+    const ended = [];
     for (const [holder, m] of tweens) {
       const p = clamp01((now - m.began) / m.length);
       holder.value = p < 1 ? lerp(m.from, m.to, m.curve(p)) : m.to;
-      if (p >= 1) tweens.delete(holder);
+      if (p < 1) continue;
+      tweens.delete(holder);
+      if (m.done) ended.push(m.done);
     }
     drawFinal();
     if (tweens.size) drawSoon();
+    for (const done of ended) done();
+  }
+
+  // The final screen as the row of pages has it: between the opening screen and ABOUT the window docks
+  // as far as the row has gone (the docking's ease undone, so that it keeps up with the finger), and the
+  // replay button is there as much as on the pages either side.
+  function followSlide() {
+    const pos = slide.value, d = clamp01(pos);
+    dock.value = d < 0.5 ? Math.cbrt(d / 4) : 1 - Math.cbrt(2 * (1 - d)) / 2;
+    const i = Math.max(0, Math.min(TABS.length - 2, Math.floor(pos))), there = k => (TABS[k] === 'home' || TABS[k] === 'settings' ? 1 : 0);
+    replayShown.value = lerp(there(i), there(i + 1), clamp01(pos - i));
   }
 
   // Ends every tween where it was going (the opening is about to play, or a frame is held).
@@ -3384,26 +3735,38 @@
   // Shows a section ('home': the opening screen). From the opening screen the window docks aside
   // first and the panel comes up as it settles; between sections only the panel's content changes
   // (and the picture folds away or comes back if the section wants it otherwise). The section shown
-  // takes the keyboard's focus, so the keys scroll it.
-  function go(tab, instant) {
+  // takes the keyboard's focus, so the keys scroll it. Slid there by a swipe (how: 'slid'), the window
+  // and the section are in place already: it is shown at once as it came in, the brackets only
+  // tightening. Come to from the section after it by the wheel ('up'), it is shown at its end, as if
+  // the page ran on.
+  function go(tab, instant, how) {
+    const slid = how === 'slid';
     if (!state.layout || tab === dock.tab && !instant) return;   // (before the first layout the boot reads the hash)
     if (state.running) enterIdle();   // asked for during the opening: skip to its end first
+    // the focus scale's blue tick sets off from where it is: on its way, where a swipe has it, or on the
+    // square being left (a swipe has brought it over already, and at once it is there)
+    const lit = slide.on ? slide.value : tweens.has(litTick) ? litTick.value : TABS.indexOf(dock.tab);
+    if (!slid) endSlide(true, true);   // (a swipe under way is let go of; the window goes on from where it is)
     endSwap();
-    const fromHome = dock.tab === 'home';
+    const fromHome = dock.tab === 'home', at = instant || slid;
     if (tab === 'settings' && dock.tab !== 'settings') fold.touched = false;   // they fold the picture away afresh
     dock.tab = tab;
-    placeBrackets(true);
-    moveTo(replayShown, tab === 'home' || tab === 'settings' ? 1 : 0, instant ? 0 : 300, ease.inOut);
+    tweens.delete(litTick);
+    litTick.value = lit;
+    if (!at) moveTo(litTick, TABS.indexOf(tab), LIT_MS, ease.out);
+    placeBrackets(slid ? 'snap' : true);
+    moveTo(replayShown, tab === 'home' || tab === 'settings' ? 1 : 0, at ? 0 : 300, ease.inOut);
     clearTimeout(dock.reveal);
+    dock.reveal = 0;
     panes.forEach(pane => { pane.hidden = true; });
     if (tab === 'home') {
       endDrag();
       tweens.delete(fold);   // the fold holds while the window opens out, which hides it anyway
       panel.classList.remove('open');
       panel.inert = true;
-      moveTo(dock, 0, instant ? 0 : 650);
+      moveTo(dock, 0, at ? 0 : 650);
       waitForPass();
-      if (gridPen.stale || meetPen.stale) penAgain(instant ? 0 : 650);
+      if (gridPen.stale || meetPen.stale) penAgain(at ? 0 : 650);
       return;
     }
     // nothing on the fill moves while a section is open (an ornament coming in again is put in place;
@@ -3424,16 +3787,18 @@
     }
     const reveal = () => {
       const shown = panes.find(pane => pane.dataset.tab === tab);
+      dock.reveal = 0;
       panel.classList.add('open');
       panel.inert = false;
       panes.forEach(pane => { pane.hidden = pane !== shown; });
-      panel.scrollTop = 0;
+      panel.scrollTop = how === 'up' ? panel.scrollHeight : 0;
       picks.scrollTop = 0;   // (the settings' pictures scroll on their own when spread across the middle)
       if (tab === 'settings') loadPicks();
       if (!shown.contains(document.activeElement)) shown.focus({ preventScroll: true });
+      if (slid) asItIs(shown);
     };
-    if (fromHome || instant) moveTo(dock, 1, instant ? 0 : 700);
-    if (instant) reveal();
+    if (fromHome || instant) moveTo(dock, 1, at ? 0 : 700);
+    if (at) reveal();
     else dock.reveal = setTimeout(reveal, fromHome ? 380 : 140);
   }
 
@@ -3639,6 +4004,7 @@
       if (saved && Number.isFinite(saved.blur)) prefs.blur = clamp01(saved.blur);
       if (saved && clock.MODES.includes(saved.time)) prefs.time = saved.time;
       if (saved && typeof saved.scene === 'string') prefs.scene = saved.scene;
+      if (saved && typeof saved.lang === 'string') prefs.lang = saved.lang;
     } catch { /* no storage (blocked site data), or a damaged entry: the defaults */ }
     split.value = prefs.split;
     fold.value = prefs.folded ? 1 : 0;
@@ -3651,20 +4017,166 @@
     } catch { /* no storage: the choices last until the page is left */ }
   }
 
-  // A section asked for on the page (the index, Esc) gets a history entry of its own, so the back
-  // button (a phone's back gesture) returns to where the visitor was.
-  function navigate(tab) {
+  // A section asked for on the page (the index, Esc, a swipe or the wheel: how, as go takes it) gets a
+  // history entry of its own, so the back button (a phone's back gesture) returns to where the visitor was.
+  function navigate(tab, how) {
     if (tab === dock.tab) return;
     history.pushState(null, '', tab === 'home' ? homeUrl() : `#${tab}`);
-    go(tab);
+    go(tab, false, how);
+  }
+
+  // ---------- swiping and the wheel ----------
+
+  // Whether a finger going down here may swipe: once the opening is over and the page is not zoomed in,
+  // not while the window is on its way somewhere (the index or a key sent it, or the picture folds away
+  // or comes back; on a phone it does not fold), not at the screen's sides (the browser's back
+  // gestures), nor on the divider, a ruler or a scrollbar of the page's own.
+  const zoomed = () => (window.visualViewport?.scale ?? 1) > 1.01;
+  function canSwipe(event) {
+    if (!state.layout || state.running || state.debugT != null || zoomed()) return false;
+    if (tweens.has(dock) || tweens.has(fold) && !state.layout.portrait || dock.reveal) return false;
+    if (event.clientX < SWIPE.edge || event.clientX > innerWidth - SWIPE.edge) return false;
+    return !(event.target instanceof Element && event.target.closest('.divider, .scrollbar, input'));
+  }
+
+  // A swipe has begun: the row takes up the pages from where they are (from the page shown, or caught
+  // as it eased into place) and the window from where it is docked. Leaving the opening screen, the
+  // light goes out and the fill's pens are put away, as when the index is used, and the picture is
+  // folded away or not as ABOUT wants it. With reduced motion nothing follows the finger.
+  function beginSlide() {
+    const L = state.layout, m = tweens.get(slide);
+    slide.base = m ? m.to : TABS.indexOf(dock.tab);
+    slide.heading = m ? Math.sign(m.to - m.from) : 0;
+    swipe.at = slide.on ? slide.value : slide.base;
+    if (reduceMotion) {
+      slide.w = L.W;
+      return;
+    }
+    tweens.delete(slide);
+    if (slide.on) return;
+    slide.on = true;
+    slide.value = slide.base;
+    tweens.delete(dock);
+    tweens.delete(replayShown);
+    if (dock.tab === 'home') {
+      dropLight(true, true);
+      softLight.pointer = null;
+      clearTimeout(gridPen.timer);
+      tweens.delete(gridPen);
+      gridPen.value = 1;
+      clearTimeout(meetPen.timer);
+      tweens.delete(meetPen);
+      if (!meetPen.stale) meetPen.value = 1;
+      tweens.delete(fold);
+      fold.value = foldWanted() ? 1 : 0;
+      panel.classList.add('peek');
+    }
+    const spread = !L.portrait && fold.value >= 0.5, style = getComputedStyle(panel);
+    slide.w = (spread ? L.dock.column : dockedAt(L).pane).w || L.W;
+    slide.pad = parseFloat(style.paddingTop) || 0;
+    slide.top = panel.scrollTop + slide.pad;
+    slide.side = [parseFloat(style.paddingLeft) || 0, parseFloat(style.paddingRight) || 0];
+    slide.squares = indexLinks.map(link => {
+      const b = link.querySelector('b');
+      return { x: link.offsetLeft + b.offsetLeft, y: link.offsetTop + b.offsetTop };
+    });
+    panel.classList.add('swiping');
+  }
+
+  // Where the row is with the finger at x: a page on for each page's width the finger has gone left
+  // since the swipe began, from where the row was then, but no more than a page either way from the
+  // page the swipe is about; past either end it gives only a little.
+  function rowAt(x) {
+    const n = TABS.length - 1, M = SWIPE.most, G = SWIPE.give * M;
+    let at = swipe.at;   // (as it was before it gave)
+    if (at < 0) at = -G * Math.atanh(Math.min(0.999, -at / M));
+    else if (at > n) at = n + G * Math.atanh(Math.min(0.999, (at - n) / M));
+    const pos = Math.min(slide.base + 1, Math.max(slide.base - 1, at + (swipe.ax - x) / slide.w));
+    return pos < 0 ? -M * Math.tanh(-pos / G) : pos > n ? n + M * Math.tanh((pos - n) / G) : pos;
+  }
+
+  // The finger has let go at x at time t: the row goes on to the next page if flicked that way (on
+  // again, if it was caught going there), or to whichever page it was let go nearer, and comes back
+  // from past either end. With reduced motion the page just changes.
+  function letGoSlide(x, t) {
+    const n = TABS.length - 1, pos = rowAt(x);
+    const track = swipe.track.filter(([at]) => t - at <= SWIPE.sample);
+    const v = track.length > 1 ? (x - track[0][1]) / Math.max(1, t - track[0][0]) : 0;   // (px/ms, rightwards)
+    const s = -Math.sign(v), flick = Math.abs(v) >= SWIPE.flick && Math.abs(x - swipe.x0) >= SWIPE.least;
+    let to = flick ? (slide.heading || s * (pos - slide.base) >= 0 ? slide.base + s : slide.base) : Math.round(pos);
+    to = Math.min(n, Math.max(0, Math.min(slide.base + 1, Math.max(slide.base - 1, to))));
+    if (reduceMotion) {
+      navigate(TABS[to]);
+      return;
+    }
+    const far = Math.abs(to - pos) * slide.w;
+    const ms = pos < 0 || pos > n ? SWIPE.bounce : TABS[to] === dock.tab ? SWIPE.back
+      : Math.min(SWIPE.settle[1], Math.max(SWIPE.settle[0], 3 * far / Math.max(Math.abs(v), 0.6)));
+    moveTo(slide, to, ms, ease.out, () => landSlide(to));
+  }
+
+  // The finger is taken away before it lets go (a second finger, or the browser takes it over): the
+  // row goes back to the page the swipe was about.
+  function dropSwipe() {
+    const live = swipe.live, k = slide.base;
+    swipe.id = null;
+    swipe.live = false;
+    if (live && slide.on) moveTo(slide, k, SWIPE.back, ease.out, () => landSlide(k));
+  }
+
+  // The row has come to rest on page k: that page is shown now, as if chosen in the index (or it is the
+  // one it was on: on the opening screen the light's passes go on).
+  function landSlide(k) {
+    endSlide();
+    if (TABS[k] !== dock.tab) navigate(TABS[k], 'slid');
+    else if (dock.tab === 'home') waitForPass();
+  }
+
+  // Puts the pages back as the panel shows them, the row at rest on the page shown (it has landed, or
+  // another way to a page was taken: keep leaves the window where it is for that to go on from). With
+  // drop, a finger on the screen is let go of too.
+  function endSlide(drop, keep) {
+    if (drop) {
+      swipe.id = null;
+      swipe.live = false;
+    }
+    if (!slide.on) return;
+    slide.on = false;
+    slide.seen.clear();
+    tweens.delete(slide);
+    const home = dock.tab === 'home';
+    if (!keep) {
+      dock.value = home ? 0 : 1;
+      replayShown.value = home || dock.tab === 'settings' ? 1 : 0;
+    }
+    for (const pane of panes) {
+      for (const name of ['position', 'top', 'left', 'right', 'transform', 'visibility']) pane.style.removeProperty(name);
+      pane.hidden = home || pane.dataset.tab !== dock.tab;
+    }
+    panel.classList.remove('swiping', 'peek');
+    panel.style.removeProperty('clip-path');
+    placeBrackets(false);
+  }
+
+  // Whether what is under the pointer (el) can still scroll down (or up), for the wheel: a section, or
+  // the settings' pictures spread across the middle (a scrollbar of the page's own comes after its box).
+  function scrollsOn(el, down) {
+    if (!(el instanceof Node)) return false;
+    return [picks, panel].some(box => (box.contains(el) || box.nextElementSibling?.contains(el))
+      && getComputedStyle(box).overflowY !== 'visible'
+      && (down ? box.scrollTop + box.clientHeight < box.scrollHeight - 1 : box.scrollTop > 0));
   }
 
   // The opening plays once per visit (browsing session); a refresh opens on its final screen.
+  function markSeen() {
+    try { sessionStorage.setItem(SEEN_KEY, '1'); } catch { /* no storage (blocked site data) */ }
+  }
+
   function firstOpening() {
     try {
       if (sessionStorage.getItem(SEEN_KEY)) return false;
-      sessionStorage.setItem(SEEN_KEY, '1');
     } catch { /* no storage (blocked site data): it plays every time */ }
+    markSeen();
     return true;
   }
 
@@ -3718,7 +4230,8 @@
   }
 
   // The settings' pictures: a tile for each in the pool after the random one, the picture over its
-  // own fill (its thumbnail twice). Their pictures load only once the settings are first shown.
+  // own fill (its thumbnail twice). Their pictures load only once the settings are first shown, and then
+  // only as they come into view.
   function makePicks() {
     state.manifest.scenes.forEach((s, i) => {
       const pick = document.createElement('button'), fill = document.createElement('img'), img = document.createElement('img');
@@ -3739,11 +4252,32 @@
     picksBar.update();
   }
 
+  // The tiles' pictures load as they come into the panel's view (with 200px to spare above and below),
+  // each once; the observer is made the first time the settings are shown and kept after that. Where the
+  // browser has none, they all load at once, as before.
+  let picksObserver = null;
+
   function loadPicks() {
-    for (const img of picks.querySelectorAll('img[data-src]')) {
-      img.src = img.dataset.src;
-      delete img.dataset.src;
+    const imgs = picks.querySelectorAll('img[data-src]');
+    if (!('IntersectionObserver' in window)) {
+      for (const img of imgs) {
+        img.src = img.dataset.src;
+        delete img.dataset.src;
+      }
+      return;
     }
+    if (!picksObserver) {
+      picksObserver = new IntersectionObserver(entries => {
+        for (const entry of entries) {
+          const img = entry.target;
+          if (!entry.isIntersecting || !img.dataset.src) continue;
+          picksObserver.unobserve(img);
+          img.src = img.dataset.src;
+          delete img.dataset.src;
+        }
+      }, { root: panel, rootMargin: '200px 0px' });
+    }
+    for (const img of imgs) picksObserver.observe(img);
   }
 
   // The chosen picture's tile shows as pressed (the random one's while none is chosen).
@@ -3954,11 +4488,13 @@
   // The picture chosen in the settings if there is one, else a random one (not the last one again,
   // so that a replay changes it): about half the time one of the time of day's own pictures, else one
   // that fits any time (not tagged with one); another time's pictures only when chosen. (Where there is
-  // none of the one kind, the other; where there are neither, any.)
+  // none of the one kind, the other; where there are neither, any.) The first one is the one boot.js has
+  // chosen the same way, and been fetching since the page started.
   function pickScene() {
     const scenes = state.manifest.scenes;
     if (!scenes.length) return null;
     let index = scenes.findIndex(s => s.far === prefs.scene);
+    if (index < 0 && state.sceneIndex < 0 && scenes[HOME_BOOT.pick]) index = HOME_BOOT.pick;
     if (index < 0) {
       const all = scenes.map((_, i) => i), fresh = pool => pool.filter(i => i !== state.sceneIndex);
       const own = all.filter(i => scenes[i].time === state.time.period), free = all.filter(i => !scenes[i].time);
@@ -3970,14 +4506,94 @@
     return scenes[index];
   }
 
+  // Points an image at a picture: at boot.js's copy where it has fetched (or is fetching) that picture for
+  // the first opening, so the bytes the loading shell counted are not fetched again, else at the file.
+  // afterArt resolves once the image has been given its source.
+  const artWait = new WeakMap();
+  function setArt(img, path) {
+    img.dataset.art = path;   // (what it is to show, whichever URL it shows it from)
+    const url = HOME_BOOT.art?.(path);
+    if (!url) {
+      artWait.delete(img);
+      img.src = path;
+      return;
+    }
+    artWait.set(img, url.then(src => { if (img.dataset.art === path) img.src = src; }));
+  }
+  const afterArt = img => artWait.get(img) || Promise.resolve();
+
   // Resolves once the picture has loaded (and is decoded where the browser can say so); a failed
-  // decode() alone does not count as a failed picture.
-  function loaded(img) {
+  // decode() alone does not count as a failed picture. A picture that is already in but broken rejects, as
+  // does one given up on (signal): the wait for the opening's resources is cleaned up with it.
+  function loaded(img, signal) {
     return new Promise((resolve, reject) => {
-      if (img.complete && img.naturalWidth) { resolve(); return; }
-      img.addEventListener('load', () => resolve(), { once: true });
-      img.addEventListener('error', () => reject(new Error(`cannot load ${img.src}`)), { once: true });
+      if (img.complete) {
+        if (img.naturalWidth) resolve();
+        else reject(new Error(`cannot load ${img.src}`));
+        return;
+      }
+      if (signal?.aborted) { reject(new Error('aborted')); return; }
+      const done = () => {
+        img.removeEventListener('load', onLoad);
+        img.removeEventListener('error', onError);
+        signal?.removeEventListener('abort', onAbort);
+      };
+      const onLoad = () => { done(); resolve(); };
+      const onError = () => { done(); reject(new Error(`cannot load ${img.src}`)); };
+      const onAbort = () => { done(); reject(new Error('aborted')); };
+      img.addEventListener('load', onLoad, { once: true });
+      img.addEventListener('error', onError, { once: true });
+      signal?.addEventListener('abort', onAbort, { once: true });
     }).then(() => img.decode().catch(() => {}));
+  }
+
+  // The ornament's bytes, asked for with a request a skipped play can abort: an image element's
+  // request for the same URL would wait behind it, not replace it. The blob URL keeps the bytes for the
+  // SVG texture for this document's lifetime, including BFCache.
+  function featherBytes(path, signal) {
+    return new Promise((resolve, reject) => {
+      if (signal?.aborted) { reject(new Error('aborted')); return; }
+      const request = new XMLHttpRequest();
+      request.open('GET', path);
+      request.responseType = 'blob';
+      request.onload = () => {
+        if (request.status >= 200 && request.status < 300) resolve(request.response);
+        else reject(new Error(`feather: HTTP ${request.status}`));
+      };
+      request.onerror = () => reject(new Error('feather: cannot load'));
+      request.onabort = () => reject(new Error('aborted'));
+      signal?.addEventListener('abort', () => request.abort(), { once: true });
+      request.send();
+    });
+  }
+
+  // Loaded and decoded before the opening starts, as the other pictures are. Only a completed load is
+  // shared: aborting a skipped play cannot poison its immediate replay or install a late texture in a
+  // different play.
+  async function loadFeather(signal) {
+    if (featherArt.ready) return true;
+    let url;
+    try {
+      let source = FEATHER.src;
+      if (location.protocol !== 'file:') {   // (file: requests cannot be aborted: the image loads directly)
+        source = url = URL.createObjectURL(await featherBytes(source, signal));
+      }
+      const img = new Image();
+      img.src = source;
+      await loaded(img, signal);
+      if (signal?.aborted) return false;
+      if (!featherArt.ready) {
+        featherArt.texture.setAttribute('href', source);
+        featherArt.ready = true;
+        url = null;   // retained with the SVG texture for this document's lifetime, including BFCache
+      }
+      return true;
+    } catch (error) {
+      if (signal?.aborted) return false;
+      throw error;
+    } finally {
+      if (url) URL.revokeObjectURL(url);
+    }
   }
 
   // The picture's sharp layer: the one sized for a screen, or where this screen shows the picture with
@@ -3996,19 +4612,23 @@
     state.scene = s;
     if (!s) return Promise.resolve();
     sceneFar.alt = s.artist ? `Adachi and Shimamura, art by ${s.artist}` : 'Adachi and Shimamura';
-    sceneFar.src = `assets/${s.far}`;
-    sceneNear.src = `assets/${sharpOf(s)}`;
+    setArt(sceneFar, `assets/${s.far}`);
+    // The sharp layer is first needed at the focus pull (and a moment before, to decode): the first
+    // opening may start before it is in (boot.js).
+    const sharp = `assets/${sharpOf(s)}`;
+    HOME_BOOT.defer?.(sharp, BEAT.focus - 400);
+    setArt(sceneNear, sharp);
     // decoded as soon as it is in, not the moment the focus is pulled onto it (a big picture would
     // hold that frame up)
-    sceneNear.decode().catch(() => {});
+    afterArt(sceneNear).then(() => sceneNear.decode()).catch(() => {});
     const thumb = new Image();
-    thumb.src = `assets/${s.thumb || s.far}`;
+    setArt(thumb, `assets/${s.thumb || s.far}`);
     wash.width = 0;   // (no fill until it is painted)
     state.washFrom = null;
     state.washes++;
     stage.style.removeProperty('--tone');   // (nor the picture's own deep colour)
     dropLight();   // (it was kept off the old picture)
-    const fill = loaded(thumb).then(() => {
+    const fill = afterArt(thumb).then(() => loaded(thumb)).then(() => {
       if (state.scene !== s) return;
       paintWash(wash, thumb);
       keepFill(thumb);
@@ -4018,10 +4638,96 @@
       if (deep) stage.style.setProperty('--tone', deep);
       if (state.layout && !state.running) drawFinal();
     }, () => {});
-    const shown = Promise.all([loaded(sceneFar), fill]);
+    state.fillReady = fill;   // (prepareOpening waits on it; a missing thumbnail leaves the sky)
+    const shown = Promise.all([afterArt(sceneFar).then(() => loaded(sceneFar)), fill]);
     // (an ornament the opening screen came up without comes in now)
     shown.then(() => { if (state.scene === s) meetAgain(); }, () => {});
     return shown;
+  }
+
+  // The lettering's fonts, actually requested and decoded: document.fonts.ready alone can resolve
+  // before the final screen's name has asked for its faces, which would let a refresh show the name in a
+  // fallback face. A font that cannot be had falls through to ready (the page still opens).
+  function openingFonts() {
+    return document.fonts
+      ? Promise.all([document.fonts.load('400 16px "Archivo Black"'), document.fonts.load('500 16px Inter')])
+        .then(() => document.fonts.ready)
+        .catch(() => document.fonts.ready)
+      : Promise.resolve();
+  }
+
+  // Waits for what the opening needs before its first frame: the lettering's fonts, the clouds, the
+  // picture's far layer and the fill's thumbnail, and its sharp layer, which the first opening need only
+  // expect in by the focus pull (boot.js counts the bytes coming in and says when; it comes in late as it
+  // arrives, sharpLate). A file that cannot be had is logged and left out; without the far layer the
+  // opening screen is shown instead (the picture is what it lands on). Each stage is a real step for the
+  // loading shell (boot.js), which shows the bytes where it has them and gives up after 15 s without a
+  // step. The token makes a wait that has been given up write nothing back.
+  async function prepareOpening(shown) {
+    const token = state.playToken;
+    const signal = state.prepareAbort?.signal;
+    const alive = () => token === state.playToken && state.phase === 'waiting' && !signal?.aborted;
+    const failures = [];
+    const fail = (what, error) => {
+      failures.push(`${what}: ${error?.message || error}`);
+      console.warn(`[opening] ${what} is not in; carrying on without it`, error);
+    };
+    const stage = async (name, value, work) => {
+      if (!alive()) return false;
+      const ok = await work.then(() => true, error => { fail(name, error); return false; });
+      if (!alive()) return false;
+      HOME_BOOT.progress(name, value);
+      return ok;
+    };
+    const whenImage = (name, img, critical) => {
+      if (!img || !(img.dataset.art || img.getAttribute('src'))) {
+        if (critical) return Promise.reject(new Error('no picture chosen'));
+        fail(name, new Error('no source'));
+        return Promise.resolve(false);
+      }
+      return afterArt(img).then(() => loaded(img, signal)).then(() => true);
+    };
+    await stage('styles', 0.06, window.__homeStyles || Promise.resolve());
+    if (!alive()) return { ok: false, failures };
+    await stage('fonts', 0.12, openingFonts());
+    if (!alive()) return { ok: false, failures };
+    await stage('feather', 0.22, loadFeather(signal));
+    if (!alive()) return { ok: false, failures };
+    // Every cloud settles on its own: one failed cloud is logged and left out, but the others are
+    // still awaited (a pending one keeps the opening waiting; it is not released by a sibling's error).
+    await stage('clouds', 0.34, Promise.all(Object.values(clouds).map(img =>
+      whenImage('cloud', img, false).catch(error => { fail('cloud', error); return false; })
+    )));
+    if (!alive()) return { ok: false, failures };
+    const far = await stage('far', 0.58, whenImage('picture', sceneFar, true));
+    if (!alive()) return { ok: false, failures };
+    await stage('fill', 0.8, state.fillReady || Promise.resolve());
+    if (!alive()) return { ok: false, failures };
+    const early = HOME_BOOT.startable?.();
+    await stage('near', 0.96, early || whenImage('sharp picture', sceneNear, false));
+    if (!alive()) return { ok: false, failures };
+    if (early && !ready(sceneNear)) {
+      const s = state.scene;
+      state.sharpLate = true;
+      afterArt(sceneNear).then(() => loaded(sceneNear)).then(() => { if (state.scene === s) sharpIn(); }, () => {});
+    }
+    shown.catch(() => {});   // (the far layer is waited on above; this keeps it handled)
+    return { ok: far, failures };
+  }
+
+  // The sharp layer, still on its way when the opening started, is in: in the opening, the focus pull
+  // takes it from now (render); past it, it is brought into focus here.
+  function sharpIn() {
+    if (!state.sharpLate) return;
+    if (state.phase === 'waiting' || state.phase === 'playing') {
+      state.sharpAt = state.start ? performance.now() - state.start : 0;
+      return;
+    }
+    state.sharpLate = false;
+    state.sharpAt = null;
+    if (!state.layout || state.running) return;
+    drawFinal();
+    if (!reduceMotion) sceneNear.animate([{ opacity: 0 }, { opacity: 1 }], { duration: BEAT.focusLen, easing: 'ease-in-out' });
   }
 
   // The fill's mean colour, kept for the visit (FILL_KEY): a refresh shows it while it waits to be shown
@@ -4520,8 +5226,15 @@
   }
 
   function enterIdle() {
+    state.phase = 'idle';
     state.running = false;
+    state.start = 0;
+    state.playToken++;
+    state.prepareAbort?.abort();
+    state.prepareAbort = null;
     cancelAnimationFrame(state.raf);
+    state.raf = 0;
+    HOME_BOOT.ready();   // (the opening's wait is over, or given up)
     tick();   // (the paper, held while the opening played)
     // come up before the picture was in (shown at once, late or skipped early), the ornament waits for
     // it and the fill round it, and then comes in (showScene)
@@ -4529,16 +5242,36 @@
       meetPen.stale = true;
       meetPen.value = 0;
     }
-    render(END);
+    // a late sharp layer still coming into focus finishes doing so (one still on its way does when it
+    // arrives, sharpIn)
+    let sharpFrom = 1;
+    if (state.sharpLate && state.sharpAt != null) {
+      sharpFrom = Number(sceneNear.style.opacity) || 0;
+      state.sharpLate = false;
+      state.sharpAt = null;
+    }
+    if (state.layout) render(END);
+    if (sharpFrom < 1 && !reduceMotion) {
+      sceneNear.animate([{ opacity: sharpFrom }, { opacity: 1 }], { duration: (1 - sharpFrom) * BEAT.focusLen, easing: 'ease-out' });
+    }
     stage.classList.remove('playing');
     stage.classList.add('idle');
     waitForPass();
     if (softLight.pointer) wakeLight();   // (under a pointer already on the fill)
   }
 
-  function stopAll() {
+  // Stops everything the opening or a section had going. keepBoot: a new opening is about to start in
+  // the same breath, so the loading shell (if it is up) is left for it rather than hidden and shown again.
+  function stopAll(keepBoot = false) {
+    state.phase = 'idle';
     state.running = false;
+    state.start = 0;
+    state.playToken++;
+    state.prepareAbort?.abort();
+    state.prepareAbort = null;
     cancelAnimationFrame(state.raf);
+    state.raf = 0;
+    endSlide(true);
     settle();
     endDrag();
     endSwap();
@@ -4551,40 +5284,77 @@
     clearTimeout(meetPen.timer);
     meetPen.stale = false;
     meetPen.value = 1;
+    state.sharpLate = false;
+    state.sharpAt = null;
     stage.classList.remove('idle');
+    stage.classList.remove('playing');
+    if (!keepBoot) HOME_BOOT.ready();
   }
 
   function play() {
-    stopAll();
+    // (a second touch while this one starts, or a replay already under way, does not start it twice)
+    if (state.phase === 'waiting' || state.phase === 'playing') return;
+    stopAll(true);
     const token = ++state.playToken;
+    state.phase = 'waiting';
+    state.skipLock = performance.now() + 350;   // (the touch that asked for this does not skip it)
+    state.prepareAbort = new AbortController();
     tick();   // (the sky and the picture by the time of day now)
-    const ready = showScene(pickScene());
+    const scene = pickScene();
+    const shown = showScene(scene);
+    shown.catch(() => {});   // (prepareOpening reports the far layer's failure itself)
     layout();
-    if (reduceMotion || !state.scene) { enterIdle(); return; }
+    if (reduceMotion || !state.scene) {
+      state.prepareAbort = null;
+      HOME_BOOT.ready();
+      enterIdle();
+      return;
+    }
     stage.classList.add('playing');
     state.running = true;
+    HOME_BOOT.begin();   // (the shell is up already, or may come up if this takes 0.6 s)
     render(0);
-    // Wait for the picture before the birds fly; after two seconds show the final screen instead,
-    // where the picture simply appears once it arrives.
-    const timeout = new Promise(resolve => setTimeout(resolve, 2000, 'late'));
-    Promise.race([ready.then(() => 'ready', () => 'late'), timeout]).then(result => {
-      if (token !== state.playToken || !state.running) return;
-      if (result === 'late') { enterIdle(); return; }
-      state.start = 0;   // the clock starts on the first painted frame (background tabs wait)
-      const loop = now => {
-        if (!state.running) return;
-        if (!state.start) state.start = now;
-        const t = now - state.start;
-        if (t >= END) { enterIdle(); return; }
-        render(t);
+    // The opening's first frame waits for its fonts, clouds and picture; boot.js gives up after 15 s
+    // without a real step and calls the fallback below, and the opening screen is shown instead. The
+    // loading shell, if it is up, then opens into that first frame (handoff) before the clock starts.
+    const going = () => token === state.playToken && state.phase === 'waiting' && state.running;
+    prepareOpening(shown).then(result => {
+      if (!going()) return undefined;
+      if (!result.ok) {
+        console.warn('The opening cannot land on its picture; showing the opening screen.', result.failures);
+        HOME_BOOT.ready();
+        enterIdle();
+        return undefined;
+      }
+      return HOME_BOOT.handoff().then(() => {
+        if (!going()) return;
+        state.phase = 'playing';
+        state.start = 0;   // the clock starts on the first painted frame (background tabs wait)
+        const loop = now => {
+          if (!state.running) return;
+          if (!state.start) state.start = now;
+          const t = now - state.start;
+          if (t >= END) { enterIdle(); return; }
+          render(t);
+          state.raf = requestAnimationFrame(loop);
+        };
         state.raf = requestAnimationFrame(loop);
-      };
-      state.raf = requestAnimationFrame(loop);
+      });
+    }).catch(error => {
+      if (token !== state.playToken || state.phase !== 'waiting') return;
+      console.warn('The opening cannot be prepared; showing the opening screen.', error);
+      HOME_BOOT.ready();
+      enterIdle();
     });
   }
 
-  function skip() {
-    if (state.running) enterIdle();
+  // Skipping works while the opening waits for its resources and while it plays. The touch or key that
+  // started it (force) is let through; a stray one just after it starts is not.
+  function skip(force) {
+    if (state.phase !== 'waiting' && state.phase !== 'playing') return;
+    if (!force && performance.now() < state.skipLock) return;
+    HOME_BOOT.ready();
+    enterIdle();
   }
 
   // The final screen without the opening: it has been seen in this visit, or a section was asked
@@ -4607,7 +5377,9 @@
   function arrive(shown) {
     const root = document.documentElement, done = () => root.classList.remove('arriving');
     if (!root.classList.contains('arriving')) return;
-    Promise.all([shown, sceneNear.decode(), document.fonts?.ready]).then(done, done);
+    Promise.all([shown, sceneNear.decode(), window.__homeStyles || Promise.resolve()])
+      .then(() => openingFonts())
+      .then(done, done);
   }
 
   // ?debug exposes seek hooks so each beat of the opening can be inspected frame by frame;
@@ -4623,7 +5395,7 @@
       stage.style.height = `${state.size[1]}px`;
     }
     window.homeDebug = {
-      state, BEAT,
+      state, BEAT, feather: featherArt,
       seek(t) {
         state.debugT = t;   // a resize while inspecting re-renders this frame instead of skipping
         stopAll();
@@ -4671,12 +5443,18 @@
         meet.up = 1;
         if (meet.G && meetPen.value === 1) drawDisc(meet.G, 1);
       },
-      dock, fold, split, prefs, softLight, meet, meetPen,
+      dock, fold, split, prefs, softLight, meet, meetPen, slide,
     };
   }
 
   makeKeyboard();
   recallPrefs();
+  HOME_BOOT.onSkip(() => skip(true));   // (a tap or a key on the loading shell)
+  HOME_BOOT.onFallback(() => {
+    if (state.phase !== 'waiting') return;
+    HOME_BOOT.ready();
+    enterIdle();
+  });
   if (window.homeDebug) {
     if (clock.MODES.includes(params.get('time'))) prefs.time = params.get('time');
     if (params.has('at')) state.at = new Date(params.get('at'));
@@ -4684,10 +5462,12 @@
   tick();
   setInterval(() => { if (!document.hidden) tick(); }, TICK);
   state.birds = FLOCK.map((_, i) => makeBird(i));
-  ['pointerdown', 'wheel', 'touchstart'].forEach(type => addEventListener(type, skip, { passive: true }));
+  // (the wheel does not skip the opening: CONTEXT 滚轮切换)
+  ['pointerdown', 'touchstart'].forEach(type => addEventListener(type, () => skip(), { passive: true }));
   // The pointer, for the fill's soft light: followed wherever it is over the page (the light keeps to
   // the fill), a finger only while it is down.
   const pointAt = event => {
+    if (swipe.live && event.pointerId === swipe.id) return;   // (a swipe: the light went out as it began)
     softLight.pointer = { x: event.clientX, y: event.clientY };
     wakeLight();
   };
@@ -4713,6 +5493,85 @@
   });
   addEventListener('popstate', () => go(tabFromHash()));
   addEventListener('hashchange', () => go(tabFromHash()));
+
+  // Swiping (CONTEXT 滑动切换): by a finger, not the mouse or a pen; a second finger sends the row back (a
+  // pinch). What the finger lets go over after a swipe is not clicked. A page coming in keeps to the
+  // panel's top in view however it scrolls.
+  addEventListener('pointerdown', event => {
+    swipe.ended = 0;
+    if (event.pointerType !== 'touch') return;
+    if (swipe.id != null) {
+      dropSwipe();
+      return;
+    }
+    if (!event.isPrimary || !canSwipe(event)) return;
+    Object.assign(swipe, { id: event.pointerId, x0: event.clientX, y0: event.clientY, t0: event.timeStamp, live: false, track: [] });
+  }, { passive: true });
+  addEventListener('pointermove', event => {
+    if (event.pointerId !== swipe.id) return;
+    const x = event.clientX, t = event.timeStamp;
+    if (!swipe.live) {
+      const dx = x - swipe.x0, dy = event.clientY - swipe.y0;
+      if (Math.hypot(dx, dy) < SWIPE.slop) return;
+      if (Math.abs(dx) <= Math.abs(dy) || t - swipe.t0 > SWIPE.hold) {   // (scrolling, or after a long press)
+        swipe.id = null;
+        return;
+      }
+      swipe.live = true;
+      swipe.ax = x;
+      beginSlide();
+    }
+    swipe.track.push([t, x]);
+    while (swipe.track.length > 2 && t - swipe.track[0][0] > SWIPE.sample) swipe.track.shift();
+    if (!slide.on) return;
+    slide.value = rowAt(x);
+    drawSoon();
+  }, { passive: true });
+  addEventListener('pointerup', event => {
+    if (event.pointerId !== swipe.id) return;
+    swipe.id = null;
+    if (!swipe.live) return;
+    swipe.live = false;
+    swipe.ended = event.timeStamp;
+    letGoSlide(event.clientX, event.timeStamp);
+  }, { passive: true });
+  addEventListener('pointercancel', event => { if (event.pointerId === swipe.id) dropSwipe(); }, { passive: true });
+  addEventListener('contextmenu', () => { if (!swipe.live) swipe.id = null; });
+  addEventListener('click', event => {
+    if (!swipe.ended || event.timeStamp - swipe.ended > 400) return;
+    swipe.ended = 0;
+    event.preventDefault();
+    event.stopPropagation();
+  }, true);
+  panel.addEventListener('scroll', () => {
+    if (!slide.on) return;
+    slide.top = panel.scrollTop + slide.pad;
+    drawSoon();
+  }, { passive: true });
+  // zoomed in with two fingers, the page pans as the browser's own (styles.css) and does not swipe
+  window.visualViewport?.addEventListener('resize', () => stage.classList.toggle('zoomed', zoomed()));
+
+  // Turning the wheel (CONTEXT 滚轮切换): a page a turn, down the index or up it (coming up into a section
+  // at its end), unless the turn scrolls something. Not while the opening plays or the window is on its
+  // way (nor for the rest of that turn), nor with a modifier held (Ctrl zooms) or going across (a
+  // touchpad's back and forward).
+  addEventListener('wheel', event => {
+    const t = event.timeStamp;
+    if (t - wheel.last > WHEEL.pause) Object.assign(wheel, { sum: 0, used: false });
+    wheel.last = t;
+    if (wheel.used || event.ctrlKey || event.shiftKey || event.altKey || event.metaKey) return;
+    if (Math.abs(event.deltaX) >= Math.abs(event.deltaY)) return;
+    if (!state.layout || state.running || state.debugT != null || slide.on || tweens.has(dock) || tweens.has(fold)
+      || dock.reveal || scrollsOn(event.target, event.deltaY > 0)) {
+      wheel.used = true;
+      return;
+    }
+    wheel.sum += event.deltaY * (event.deltaMode === 1 ? 40 : event.deltaMode === 2 ? innerHeight : 1);
+    if (Math.abs(wheel.sum) < WHEEL.least) return;
+    wheel.used = true;
+    const on = wheel.sum > 0, k = TABS.indexOf(dock.tab) + (on ? 1 : -1);
+    if (k >= 0 && k < TABS.length) navigate(TABS[k], on ? undefined : 'up');
+  }, { passive: true });
 
   // The settings: a ruler moved (a double-click puts it back to the usual; while it is dragged the
   // whole page shows the closed hand), a picture or a time of day chosen, a key on the map pointed at
@@ -4765,6 +5624,64 @@
       }, 1600);
     }, writeMail);
   });
+
+  // ABOUT's 中 / EN switch, there where both languages are written (tools/build_about.py writes the
+  // words into the page from content/). The first one shown is the browser's: Chinese for a Chinese
+  // one, English for any other; a click picks the other, kept for the visit with the other choices.
+  // The focus brackets lock on to the square picked; the words going out fade as they lift a little,
+  // the new ones rise into their place, and the section goes back to its top.
+  const langSwitch = $('#langSwitch'), aboutText = $('.about-text'), aboutLangs = $$('.about-lang');
+  let langSwap = 0;   // the swap under way (a later one, or the section hidden, ends it)
+  function showLang(lang, animate) {
+    const next = aboutLangs.find(block => block.dataset.lang === lang);
+    const now = aboutLangs.find(block => !block.hidden);
+    if (!next || next === now) return;
+    for (const button of langSwitch.querySelectorAll('button')) {
+      button.setAttribute('aria-pressed', String(button.dataset.lang === lang));
+    }
+    const swap = ++langSwap;
+    aboutLangs.forEach(block => block.classList.remove('leaving', 'entering'));
+    if (!animate || reduceMotion || !now) {
+      aboutLangs.forEach(block => { block.hidden = block !== next; });
+      return;
+    }
+    // (until the section is next hidden: the brackets lock at once, not after the entrance, and the
+    // paragraphs do not rise one by one as well; changing either back sooner would play it again)
+    langSwitch.classList.add('switched');
+    aboutText.classList.add('swapped');
+    now.classList.add('leaving');
+    now.addEventListener('animationend', () => {
+      if (swap !== langSwap) return;
+      now.classList.remove('leaving');
+      aboutLangs.forEach(block => { block.hidden = block !== next; });
+      panel.scrollTop = 0;
+      next.classList.add('entering');
+      next.addEventListener('animationend', () => next.classList.remove('entering'), { once: true });
+    }, { once: true });
+  }
+  if (langSwitch) {
+    const browserLang = (navigator.languages?.[0] || navigator.language || '').toLowerCase().startsWith('zh') ? 'zh' : 'en';
+    showLang(aboutLangs.some(block => block.dataset.lang === prefs.lang) ? prefs.lang : browserLang, false);
+    langSwitch.addEventListener('click', event => {
+      const button = event.target.closest('button[data-lang]');
+      if (!button || button.getAttribute('aria-pressed') === 'true') return;
+      prefs.lang = button.dataset.lang;
+      keepPrefs();
+      showLang(prefs.lang, true);
+    });
+    const aboutPane = langSwitch.closest('.pane');
+    new MutationObserver(() => {
+      if (!aboutPane.hidden) return;
+      const lang = langSwitch.querySelector('[aria-pressed="true"]').dataset.lang;
+      langSwap++;
+      aboutLangs.forEach(block => {
+        block.classList.remove('leaving', 'entering');
+        block.hidden = block.dataset.lang !== lang;
+      });
+      langSwitch.classList.remove('switched');
+      aboutText.classList.remove('swapped');
+    }).observe(aboutPane, { attributes: true, attributeFilter: ['hidden'] });
+  }
   kb.addEventListener('pointerover', event => {
     const key = event.target.closest('.k');
     if (key) describeKey(key);
@@ -4871,22 +5788,31 @@
   const relayout = () => {
     if (!state.layout) return;
     endSwap();   // the picture is framed afresh
+    endSlide(true);   // (and a swipe under way is let go of)
     if (state.debugT != null) { layout(); render(state.debugT); return; }
-    if (state.running) { layout(); return; }   // the running loop draws the next frame
     layout();
+    // While the opening waits or plays, the running loop draws the next frame: drawing the final screen
+    // here would end it, and the clock (state.start) is left where it is.
+    if (state.phase === 'waiting' || state.phase === 'playing' || state.running) return;
     render(END);
   };
-  let resizeTimer = 0;
+  let resizeTimer = 0, lastWidth = innerWidth, lastHeight = innerHeight;
   addEventListener('resize', () => {
     clearTimeout(resizeTimer);
     resizeTimer = setTimeout(() => {
-      if (state.running && state.debugT == null) enterIdle();
-      relayout();
+      // a phone's address bar sliding in and out, or the same size reported twice, is no new layout
+      if (innerWidth === lastWidth && innerHeight === lastHeight) return;
+      lastWidth = innerWidth;
+      lastHeight = innerHeight;
+      relayout();   // (a rotation or a new size never skips the opening)
     }, 120);
   });
   // HELLO is measured (and rasterised for its dust) in its display font, and so is the section
   // index; redo them once the web fonts have arrived.
   if (document.fonts) document.fonts.ready.then(relayout);
+  // The stylesheet is non-blocking: a final screen laid out while it is still media="print"
+  // has no usable index geometry. Recompute once it is active, without restarting the opening.
+  if (window.__homeStyles) window.__homeStyles.then(() => { if (state.layout) relayout(); }).catch(() => {});
 
   // assets/manifest.js carries the same data as a script, so a page opened from disk (where
   // fetch is blocked) still finds its pictures.
@@ -4906,7 +5832,7 @@
       makePicks();
       for (const [name, el] of Object.entries(clouds)) {
         const info = state.manifest.sky[name];
-        if (info) el.src = `assets/${info.file}`;
+        if (info) setArt(el, `assets/${info.file}`);   // (boot.js has been fetching them for the opening)
         // the surf's puffs and the cloud sea are cut and painted from these: they are laid out again as
         // each comes in (a frame held for inspection is drawn again)
         el.addEventListener('load', () => {
@@ -4920,7 +5846,15 @@
         // the picture paints in place whenever it arrives, so the frame does not wait for it
         homeDebug.scene(Number(params.get('scene') || 0));
         homeDebug.seek(Number(params.get('t')));
+        loadFeather().then(() => render(state.debugT ?? END), error => {
+          console.warn('[opening] feather is not in; carrying on without it', error);
+        });
         document.documentElement.classList.remove('arriving');
+      } else if (HOME_BOOT.skipped || HOME_BOOT.timedOut) {
+        // the visitor left the loading shell, or it gave up before main.js was ready: the opening
+        // screen, and this visit has had its opening
+        markSeen();
+        showFinal();
       } else if (tab === 'home' && firstOpening()) {
         play();
       } else {

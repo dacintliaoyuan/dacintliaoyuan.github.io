@@ -9,13 +9,196 @@
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' rx='3' fill='%233fafe0'/%3E%3Crect x='4.5' y='4.5' width='7' height='7' fill='none' stroke='white' stroke-width='1.5'/%3E%3C/svg%3E">
 <link rel="preload" href="fonts/archivo-black-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="styles.css">
-<!-- the time of day, before the first paint: a visit at night opens on the night paper -->
-<script src="time.js"></script>
+<!-- The loading shell's critical style: it must cover the page before the stylesheet, the big
+     pictures and main.js are in. It holds the whole shell (iris, dial, ruler), so a slow styles.css
+     cannot delay it; it holds no lettering. Its lines use the stylesheet's colours, set here too. -->
+<style>
+  :root {
+    --paper: #f4f6f8; --paper: color-mix(in srgb, #f4f6f8, #0d1628 calc(100% * var(--dark, 0)));
+    --ink: #3c4458; --ink: color-mix(in srgb, #3c4458, #d3dcea calc(100% * var(--light, 0)));
+    --ink-soft: #66748a; --ink-soft: color-mix(in srgb, #66748a, #8c9ab2 calc(100% * var(--light, 0)));
+    --hair: rgba(60, 68, 88, 0.42); --hair: color-mix(in srgb, rgba(60, 68, 88, 0.42), rgba(196, 210, 234, 0.34) calc(100% * var(--light, 0)));
+    --accent: #1c8ad7;
+  }
+  /* (no scrollbar for the page parsed before its styles: it never scrolls) */
+  html, body { margin: 0; min-height: 100%; overflow: hidden; background: var(--paper, #f4f6f8); }
+  /* Keep parsed HTML out of the first paint until the opening has its styles and first frame. */
+  html.starting .stage, html.starting .stage *, html.starting .pointer { visibility: hidden !important; }
+  .strip { opacity: 0; }
+  /* The shell (boot.js): drawn in screen pixels round the shot's window, where the opening's guides
+     cross. It fades in; at the handoff its paper goes (open) and the opening's first frame shows through
+     its rim and ruler, which the opening then draws over. */
+  .boot { position: fixed; inset: 0; z-index: 1000; background-color: var(--paper, #f4f6f8); opacity: 0; transition: opacity 0.32s ease, background-color 0.3s ease; }
+  .boot[hidden] { display: none; }
+  .boot.on { opacity: 1; }
+  .boot.done { opacity: 0; pointer-events: none; }
+  .boot.open { background-color: transparent; pointer-events: none; }
+  .boot-lines { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; fill: none; }
+  .boot-lines .rim { stroke: var(--ink); stroke-width: 1; }
+  .boot-lines .rim-hair, .boot-lines .rule { stroke: var(--hair); stroke-width: 0.75; }
+  .boot-lines .blades { stroke: var(--ink); stroke-width: 0.8; }
+  .boot-lines .hole { stroke: var(--accent); stroke-width: 1.3; stroke-linejoin: round; }
+  .boot-lines .ticks { stroke: var(--ink-soft); stroke-width: 0.75; }
+  .boot-lines .fill { stroke: var(--accent); stroke-width: 2.5; }
+  /* the dial round the iris turns on its own, never as progress (a layer of its own, so it turns while
+     the page is busy); its rim stands in only for a shell without boot.js */
+  .boot-dial { position: absolute; left: var(--boot-x, 50%); top: var(--boot-y, 43%); width: calc(2.4 * var(--boot-r, min(140px, 25vw, 15.5vh))); aspect-ratio: 1; translate: -50% -50%; animation: boot-turn 12s linear infinite; transition: opacity 0.25s ease; }
+  .boot-dial svg { display: block; width: 100%; height: 100%; overflow: visible; fill: none; stroke: var(--ink); stroke-width: 0.75; }
+  .boot-dial * { vector-effect: non-scaling-stroke; }
+  .boot.drawn .boot-dial circle { display: none; }
+  .boot.opening .boot-dial { animation-play-state: paused; opacity: 0; }
+  @keyframes boot-turn { to { rotate: 360deg; } }
+  @media (prefers-reduced-motion: reduce) { .boot-dial { animation: none; } }
+  /* Refresh/deep-link protection must hold before styles.css: hide the raw page, keep the last fill
+     colour, and stop the unlaid-out stage from spilling while the main styles are still pending. */
+  html.arriving body { visibility: hidden; }
+  html.arriving { background: var(--arrive, #f4f6f8); }
+  html.arriving .stage { position: fixed; inset: 0; width: 100vw; height: 100vh; overflow: hidden; }
+</style>
+<script>
+  (() => {
+    const root = document.documentElement;
+    root.classList.add('starting');
+    let stylesSettled = false, queued = false;
+    const ready = () => {
+      const boot = window.HOME_BOOT, stage = document.getElementById('stage');
+      return boot && (boot.timedOut || (stylesSettled && boot.done && stage &&
+        (stage.classList.contains('playing') || stage.classList.contains('idle'))));
+    };
+    const finish = () => {
+      root.classList.remove('starting');
+      observer.disconnect();
+      clearTimeout(watchdog);
+    };
+    const reveal = () => {
+      if (queued || !ready()) return;
+      queued = true;
+      requestAnimationFrame(() => {
+        queued = false;
+        if (ready()) finish();
+      });
+    };
+    const observer = new MutationObserver(reveal);
+    observer.observe(root, { subtree: true, childList: true, attributes: true, attributeFilter: ['class', 'style', 'hidden'] });
+    // Boot owns resource timeouts. This only prevents a missing entry script from hiding the page forever.
+    const watchdog = setTimeout(() => {
+      if (!window.HOME_BOOT || window.HOME_BOOT.done) finish();
+    }, 15000);
+    window.__homeStyles = new Promise((resolve) => {
+      window.__homeStylesDone = () => { stylesSettled = true; resolve(); reveal(); };
+    });
+  })();
+</script>
+<link rel="stylesheet" href="styles.css" media="print" onload="this.media='all'; window.__homeStylesDone && window.__homeStylesDone();" onerror="console.error('styles.css failed'); window.__homeStylesDone && window.__homeStylesDone();">
+<noscript><link rel="stylesheet" href="styles.css"></noscript>
+<!-- the time of day, before the first paint: a visit at night opens on the night paper. Inlined so a
+     hanging external time.js cannot block body parsing or the loading shell. -->
+<script>
+window.HOME_TIME = (() => {
+  'use strict';
+
+  const DEG = Math.PI / 180;
+  const PERIODS = ['day', 'dusk', 'night'];
+  const MODES = ['auto', ...PERIODS];
+  const SKY = { day: [8, 2], night: [-2, -8], period: 6 };
+  const PAPER = [[244, 246, 248], [13, 22, 40]];
+  const PREFS_KEY = 'home:prefs';
+  const ZONES = {
+    'Asia/Shanghai': [31.23, 121.47], 'Asia/Urumqi': [43.8, 87.58], 'Asia/Hong_Kong': [22.28, 114.15],
+    'Asia/Macau': [22.2, 113.54], 'Asia/Taipei': [25.05, 121.5], 'Asia/Tokyo': [35.65, 139.74],
+    'Asia/Seoul': [37.55, 126.97], 'Asia/Singapore': [1.28, 103.85], 'Asia/Kuala_Lumpur': [3.17, 101.7],
+    'Asia/Bangkok': [13.75, 100.52], 'Asia/Ho_Chi_Minh': [10.75, 106.67], 'Asia/Saigon': [10.75, 106.67],
+    'Asia/Manila': [14.58, 121], 'Asia/Jakarta': [-6.17, 106.8], 'Asia/Kolkata': [22.53, 88.37],
+    'Asia/Calcutta': [22.53, 88.37], 'Asia/Dubai': [25.3, 55.3], 'Europe/Moscow': [55.76, 37.62],
+    'Europe/London': [51.51, -0.12], 'Europe/Paris': [48.87, 2.33], 'Europe/Berlin': [52.5, 13.37],
+    'America/New_York': [40.71, -74.01], 'America/Chicago': [41.85, -87.65], 'America/Denver': [39.74, -104.98],
+    'America/Los_Angeles': [34.05, -118.24], 'America/Toronto': [43.65, -79.38], 'America/Vancouver': [49.27, -123.12],
+    'America/Sao_Paulo': [-23.53, -46.62], 'Australia/Sydney': [-33.87, 151.22], 'Australia/Melbourne': [-37.82, 144.97],
+    'Australia/Brisbane': [-27.47, 153.03], 'Australia/Perth': [-31.95, 115.85], 'Pacific/Auckland': [-36.87, 174.77],
+  };
+
+  const smooth = (a, b, x) => { const p = Math.min(1, Math.max(0, (x - a) / (b - a))); return p * p * (3 - 2 * p); };
+  const days = ms => ms / 864e5 - 10957.5;
+
+  function place(date) {
+    let zone = '';
+    try { zone = Intl.DateTimeFormat().resolvedOptions().timeZone || ''; } catch { /* (a browser without it) */ }
+    if (ZONES[zone]) return ZONES[zone];
+    const year = date.getFullYear(), jan = -new Date(year, 0, 1).getTimezoneOffset(), jul = -new Date(year, 6, 1).getTimezoneOffset();
+    return [jan > jul || /^(Australia|Antarctica)\//.test(zone) ? -30 : 35, Math.min(jan, jul) / 4];
+  }
+  const [lat, lon] = place(new Date());
+
+  function sunAt(ms) {
+    const n = days(ms), g = (357.529 + 0.98560028 * n) * DEG;
+    const ecliptic = (280.459 + 0.98564736 * n + 1.915 * Math.sin(g) + 0.02 * Math.sin(2 * g)) * DEG, tilt = (23.439 - 3.6e-7 * n) * DEG;
+    const ra = Math.atan2(Math.cos(tilt) * Math.sin(ecliptic), Math.cos(ecliptic)), dec = Math.asin(Math.sin(tilt) * Math.sin(ecliptic));
+    const hour = (280.46061837 + 360.98564736629 * n + lon) * DEG - ra;
+    return Math.asin(Math.sin(lat * DEG) * Math.sin(dec) + Math.cos(lat * DEG) * Math.cos(dec) * Math.cos(hour)) / DEG;
+  }
+
+  function sunTimes(ms) {
+    const HORIZON = -0.833, STEP = 6e5;
+    let last = null, next = null, t0 = ms - 864e5, h0 = sunAt(t0) - HORIZON;
+    for (let t = t0 + STEP; t <= ms + 864e5 && !next; t += STEP) {
+      const h = sunAt(t) - HORIZON;
+      if (h0 < 0 !== h < 0) {
+        const event = { rise: h > 0, at: new Date(t - STEP * h / (h - h0)) };
+        if (event.at <= ms) last = event;
+        else next = event;
+      }
+      [t0, h0] = [t, h];
+    }
+    return { last, next };
+  }
+
+  function moonAt(ms) {
+    const T = days(ms) / 36525, D = (297.8501921 + 445267.1114034 * T) * DEG;
+    const M = (357.5291092 + 35999.0502909 * T) * DEG, Mm = (134.9633964 + 477198.8675055 * T) * DEG;
+    const i = (180 - D / DEG - 6.289 * Math.sin(Mm) + 2.1 * Math.sin(M) - 1.274 * Math.sin(2 * D - Mm)
+      - 0.658 * Math.sin(2 * D) - 0.214 * Math.sin(2 * Mm) - 0.11 * Math.sin(D)) * DEG;
+    return { lit: (1 + Math.cos(i)) / 2, waxing: Math.sin(i) > 0 };
+  }
+
+  function at(date, mode) {
+    const ms = +date, h = sunAt(ms), moon = moonAt(ms);
+    const real = h > SKY.period ? 'day' : h < -SKY.period ? 'night' : 'dusk';
+    const time = { mode: MODES.includes(mode) ? mode : 'auto', real, sun: sunTimes(ms), moon: { lit: moon.lit, right: moon.waxing !== lat < 0 } };
+    if (time.mode !== 'auto') {
+      const night = time.mode === 'night';
+      return { ...time, period: time.mode, sky: PERIODS.indexOf(time.mode), dark: night ? 1 : 0, light: night ? 1 : 0 };
+    }
+    const p = smooth(SKY.period, -SKY.period, h), dark = p * p * (3 - 2 * p);
+    const sky = smooth(SKY.day[0], SKY.day[1], h) + smooth(SKY.night[0], SKY.night[1], h);
+    return { ...time, period: real, sky, dark, light: dark >= 0.5 ? 1 : 0 };
+  }
+
+  function paper(time, smoothly) {
+    const root = document.documentElement;
+    if (smoothly) root.classList.add('time-ease');
+    root.style.setProperty('--dark', time.dark.toFixed(3));
+    root.style.setProperty('--light', String(time.light));
+    const meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) meta.content = `rgb(${PAPER[0].map((v, i) => Math.round(v + (PAPER[1][i] - v) * time.dark)).join(', ')})`;
+  }
+
+  let mode = 'auto';
+  try { mode = (JSON.parse(sessionStorage.getItem(PREFS_KEY) || 'null') || {}).time; } catch { /* no storage: the time now */ }
+  paper(at(new Date(), mode), false);
+  return { PERIODS, MODES, at, paper };
+})();
+</script>
+<!-- the opening's loading shell, before main.js: a first visit still waiting for its pictures 0.6 s
+     after it was opened gets a camera iris over a ruler, not a blank page, and the pictures start coming
+     in from here rather than once main.js is in (boot.js; no lettering). Async so a hanging request
+     cannot block body parsing or main.js's own fallback controller. -->
+<script src="boot.js" async fetchpriority="high"></script>
 <!-- a visit that opens straight on the opening screen or a section (a refresh, a link to a section) is
      kept hidden until main.js can show it whole (arrive), so that it does not flash its first states on
      the way: the browser keeps the page it came from up meanwhile, or shows the fill's colour as it was
-     last in this visit. After 2 s it is shown as it is. -->
+     last in this visit. The inline critical style keeps it hidden before styles.css; main.js's arrive()
+     owns the normal reveal once the picture, its sharp layer, the fill, the fonts and the styles are ready.
+     15 s is only a bounded safety fallback for a main.js that never arrives, not a readiness signal. -->
 <script>
   (() => {
     let seen = false, fill = null;
@@ -27,16 +210,23 @@
     const root = document.documentElement;
     root.classList.add('arriving');
     if (fill) root.style.setProperty('--arrive', fill);
-    setTimeout(() => root.classList.remove('arriving'), 2000);
+    setTimeout(() => root.classList.remove('arriving'), 15000);
   })();
 </script>
 </head>
 <body>
+<!-- The opening's loading shell (boot.js): a camera iris over a ruler, no lettering. It stays hidden
+     until a first visit has waited 0.6 s for the opening's pictures; its look is in the critical style
+     above, its lines are drawn by boot.js, and the dial is here so that it turns without it. -->
+<div class="boot" id="boot" hidden>
+  <svg class="boot-lines" aria-hidden="true"></svg>
+  <div class="boot-dial" aria-hidden="true"><svg viewBox="-1.2 -1.2 2.4 2.4"><circle r="1"/><path d="M1.050 .000L1.170 .000M1.037 .164L1.106 .175M.999 .324L1.065 .346M.936 .477L.998 .508M.849 .617L.906 .658M.742 .742L.827 .827M.617 .849L.658 .906M.477 .936L.508 .998M.324 .999L.346 1.065M.164 1.037L.175 1.106M.000 1.050L.000 1.170M-.164 1.037L-.175 1.106M-.324 .999L-.346 1.065M-.477 .936L-.508 .998M-.617 .849L-.658 .906M-.742 .742L-.827 .827M-.849 .617L-.906 .658M-.936 .477L-.998 .508M-.999 .324L-1.065 .346M-1.037 .164L-1.106 .175M-1.050 .000L-1.170 .000M-1.037 -.164L-1.106 -.175M-.999 -.324L-1.065 -.346M-.936 -.477L-.998 -.508M-.849 -.617L-.906 -.658M-.742 -.742L-.827 -.827M-.617 -.849L-.658 -.906M-.477 -.936L-.508 -.998M-.324 -.999L-.346 -1.065M-.164 -1.037L-.175 -1.106M0 -1.050L0 -1.170M.164 -1.037L.175 -1.106M.324 -.999L.346 -1.065M.477 -.936L.508 -.998M.617 -.849L.658 -.906M.742 -.742L.827 -.827M.849 -.617L.906 -.658M.936 -.477L.998 -.508M.999 -.324L1.065 -.346M1.037 -.164L1.106 -.175"/></svg></div>
+</div>
 <main class="stage" id="stage">
   <!-- The paper, under the window: construction lines through the shot at the start, then
        ornaments in the margins (outline squares on diagonals, cross marks, pixel squares, bars in
-       the bottom corners) and, with HELLO, butterflies and blue-bird feathers drawn by the page.
-       No text and no pictures; the window covers it all when it opens out. -->
+       the bottom corners) and, with HELLO, butterflies and transparent blue-bird feather ornaments.
+       No content in the margins; the window covers it all when it opens out. -->
   <svg class="guides" id="guides" aria-hidden="true">
     <defs>
       <pattern id="blinds" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(48)">
@@ -44,10 +234,6 @@
       </pattern>
       <linearGradient id="fadeBar">
         <stop offset="0" stop-color="#1c8ad7"/><stop offset="1" stop-color="#bfe3f4"/>
-      </linearGradient>
-      <!-- a feather's vane: lighter along the shaft -->
-      <linearGradient id="vane">
-        <stop offset="0" stop-color="#1c8ad7"/><stop offset="0.5" stop-color="#59bff7"/><stop offset="1" stop-color="#1c8ad7"/>
       </linearGradient>
     </defs>
   </svg>
@@ -176,11 +362,30 @@
        middle of the screen, laid out across it, in white on a frosted block straight on the picture. -->
   <div class="panel" id="panel" inert>
     <section class="pane" data-tab="about" aria-labelledby="about-title" tabindex="-1" hidden>
-      <h2 class="pane-title" id="about-title">ABOUT</h2>
+      <!-- The words come from content/about.zh.md and about.en.md (tools/build_about.py writes them
+           in between the markers; edit those files, not this). With both written, a 中 / EN switch
+           by the title picks the language (main.js). -->
+      <div class="pane-head">
+        <h2 class="pane-title" id="about-title">ABOUT</h2>
+        <!-- about-switch:start -->
+        <div class="lang-switch" id="langSwitch" role="group" aria-label="Language">
+          <button type="button" data-lang="zh" lang="zh-CN" aria-pressed="true">中</button>
+          <button type="button" data-lang="en" lang="en" aria-pressed="false">EN</button>
+        </div>
+        <!-- about-switch:end -->
+      </div>
       <div class="pane-rules" aria-hidden="true"><i></i><i></i></div>
-      <div class="about-text" aria-hidden="true">
-        <i class="sk" style="--w: 96%"></i><i class="sk" style="--w: 90%"></i><i class="sk" style="--w: 93%"></i>
-        <i class="sk" style="--w: 84%"></i><i class="sk" style="--w: 42%"></i>
+      <div class="about-text">
+        <!-- about-text:start -->
+        <div class="about-lang" data-lang="zh" lang="zh-CN">
+          <p>【示例，请换成你自己的介绍】这里是 ABOUT 的第一段。你可以在编辑器里随手折行，网页上会接成一整段，中文之间不会多出空格。<strong>加粗的字</strong>会显示成粗体。</p>
+          <p>这是第二段：空一行就是新段落。站外链接像 <a href="https://github.com/dacintliaoyuan" target="_blank" rel="noopener">GitHub<span class="sr-only">（在新标签页打开）</span></a> 这样写，会在新标签页打开；站内链接像 <a href="#projects">看看项目</a> 这样写，会在本页跳转。</p>
+        </div>
+        <div class="about-lang" data-lang="en" lang="en" hidden>
+          <p>[Sample — replace with your own words] This is the first paragraph of ABOUT. Lines broken in the editor are joined into one paragraph, with a space between English words. <strong>Bold words</strong> show in bold.</p>
+          <p>A blank line starts a second paragraph. A link elsewhere, like <a href="https://github.com/dacintliaoyuan" target="_blank" rel="noopener">GitHub<span class="sr-only"> (opens in a new tab)</span></a>, opens in a new tab; one on the page, like <a href="#projects">the projects</a>, stays here.</p>
+        </div>
+        <!-- about-text:end -->
       </div>
     </section>
     <section class="pane" data-tab="projects" aria-labelledby="projects-title" tabindex="-1" hidden>
@@ -296,6 +501,7 @@
   <div class="shutter" id="shutter" aria-hidden="true"></div>
 </main>
 <script src="assets/manifest.js" defer></script>
+<script src="pointer-art.js" defer></script>
 <script src="pointer.js" defer></script>
 <script src="main.js" defer></script>
 </body>

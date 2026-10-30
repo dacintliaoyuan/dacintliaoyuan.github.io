@@ -526,7 +526,9 @@
     // fade in is over) and the promise resolves as the opening is to begin; without a shell, at once.
     handoff() {
       if (done) return Promise.resolve();
-      if (!shellShown) {
+      // (a replay has no shell of its own: enabled is off after the first opening, even though
+      // shellShown still records that the first visit's shell was up)
+      if (!enabled || !shellShown) {
         finish();
         return Promise.resolve();
       }
